@@ -1439,10 +1439,11 @@
         captureZone.innerHTML = html;
         document.body.appendChild(captureZone);
 
-        // 3. 執行截圖
+        // 3. 執行截圖 (加入防卡死機制與跨域許可)
         html2canvas(captureZone, {
             backgroundColor: '#ffffff',
             scale: 2,
+            useCORS: true, // 允許讀取同層圖片，解決跨域污染問題
             logging: false
         }).then(canvas => {
             document.body.removeChild(captureZone); // 拍完立刻移除隱藏版面
@@ -1462,6 +1463,15 @@
                     }
                 }
             }, 'image/png');
+        }).catch(error => {
+            // 發生錯誤時的急救處理，避免按鈕永遠卡在沙漏
+            if (document.body.contains(captureZone)) {
+                document.body.removeChild(captureZone);
+            }
+            btn.innerText = '❌';
+            setTimeout(() => { btn.innerText = '📸'; btn.style.pointerEvents = 'auto'; }, 2000);
+            alert('截圖失敗！\n1. 請確認 qrcode.png 檔案已上傳，且副檔名與大小寫完全一致。\n2. 若是本機測試，請透過 VS Code 的 Live Server (Go Live) 開啟網頁。');
+            console.error('html2canvas error:', error);
         });
     }
 

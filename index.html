@@ -1304,49 +1304,152 @@
         document.getElementById('gua-changed').innerHTML = html;
     }
 
-    // --- 一鍵截圖並複製到剪貼簿功能 ---
+    // --- 一鍵截圖並複製到剪貼簿功能 (簡化畫面集中版) ---
     function copyToClipboard() {
         const btn = document.querySelector('.fab-copy-btn');
-        btn.innerText = '⏳'; // 點擊後先顯示沙漏，代表處理中
-        btn.style.pointerEvents = 'none'; // 暫時防止連點
-        
-        // 1. 隱藏不希望出現在截圖裡的控制介面
-        const inputSec = document.querySelector('.input-section');
-        const yongshenSelect = document.getElementById('yongshen-select').parentElement; 
-        const headerTitleBook = document.querySelector('.header-title a'); // 📘 按鈕
-        
-        inputSec.style.display = 'none';
-        yongshenSelect.style.display = 'none';
-        if(headerTitleBook) headerTitleBook.style.display = 'none';
-        btn.style.display = 'none';
+        btn.innerText = '⏳'; 
+        btn.style.pointerEvents = 'none'; 
 
-        // 2. 針對主容器進行完美截圖
-        const container = document.querySelector('.container');
+        // 1. 抓取目前畫面上的資訊
+        const dtStr = document.getElementById('dt-input').value;
+        const dt = new Date(dtStr);
+        const formattedDate = `西元${dt.getFullYear()}年 ${dt.getMonth()+1}月${dt.getDate()}日 ${String(dt.getHours()).padStart(2, '0')}時${String(dt.getMinutes()).padStart(2, '0')}分`;
 
-        html2canvas(container, {
-            backgroundColor: '#eef2f5', // 設定與網頁一致的背景色
-            scale: 2 // 提高解析度，讓圖片更清晰
+        const stems = document.querySelectorAll('.bazi-grid .stem');
+        const branches = document.querySelectorAll('.bazi-grid .branch');
+        // 完美對齊的排版時日月年
+            const baziStr = `
+                <div style="display:flex; gap: 18px; text-align: center; margin-right: 20px; font-weight: normal;">
+                    <div><div>時</div><div>${stems[3].innerText}</div><div>${branches[3].innerText}</div></div>
+                    <div><div>日</div><div>${stems[2].innerText}</div><div>${branches[2].innerText}</div></div>
+                    <div><div>月</div><div>${stems[1].innerText}</div><div>${branches[1].innerText}</div></div>
+                    <div><div>年</div><div>${stems[0].innerText}</div><div>${branches[0].innerText}</div></div>
+                </div>`;
+
+            let noble = '', peach = '', empty = '', horse = '', blade = '';
+            document.querySelectorAll('.shensha-item').forEach(item => {
+                const text = item.innerText;
+                if(text.includes('貴人')) noble = text.replace('貴人', '').trim();
+                if(text.includes('桃花')) peach = text.replace('桃花', '').trim();
+                if(text.includes('日空')) empty = text.replace('日空', '').trim();
+                if(text.includes('驛馬')) horse = text.replace('驛馬', '').trim();
+                if(text.includes('羊刃')) blade = text.replace('羊刃', '').trim();
+            });
+
+            const origTitle = document.querySelectorAll('.gua-title-box')[0];
+            const chgTitle = document.querySelectorAll('.gua-title-box')[1];
+            const origName = origTitle ? origTitle.querySelector('.gua-name').innerText : '';
+            const origPalace = origTitle ? origTitle.querySelector('.gua-palace').innerText : '';
+            const chgName = chgTitle ? chgTitle.querySelector('.gua-name').innerText : '';
+
+            const origLinesDOM = document.querySelectorAll('#gua-original .line-row');
+            const chgLinesDOM = document.querySelectorAll('#gua-changed .line-row');
+            
+            // 抓取用神
+            const yongShenValue = document.getElementById('yongshen-select').value;
+
+            // 2. 建立隱藏的截圖專用版面 (模仿附圖格式)
+            const captureZone = document.createElement('div');
+            captureZone.style.cssText = 'position:fixed; top:-9999px; left:0; width:750px; background-color:#ffffff; padding:40px; font-family:"Microsoft JhengHei",sans-serif; color:#000000; z-index:-1000; box-sizing: border-box;';
+            
+            let html = `
+                <div style="font-size: 18px; margin-bottom: 10px; color: #1e40af; font-weight: bold;">${formattedDate}</div>
+                <div style="display: flex; gap: 40px; font-size: 18px; margin-bottom: 25px;">
+                    ${baziStr}
+                    <div style="display:inline-block; line-height: 1.5;">
+                        貴人：${noble}<br>
+                        桃花：${peach}<br>
+                        日空：<span style="color:#16a34a;">${empty}</span>
+                    </div>
+                    <div style="display:inline-block; line-height: 1.5;">
+                        驛馬：${horse}<br>
+                        羊刃：${blade}<br>
+                        用神：${yongShenValue}
+                    </div>
+                </div>
+
+                <div style="display: flex; font-size: 18px; margin-bottom: 15px; font-weight: bold;">
+                    <div style="width: 50px;">六獸</div>
+                    <div style="width: 140px; text-align: center;">〔伏神〕</div>
+                    <div style="flex: 1; text-align: center;">${origPalace ? origPalace.split(' - ')[0] : ''}：${origName.replace(/【|】/g, '')}<br>〔本卦〕</div>
+                    <div style="width: 60px;"></div>
+                    <div style="flex: 1; text-align: center;">${chgName ? chgName.replace(/【|】/g, '') : ''}<br>${chgName ? '〔變卦〕' : ''}</div>
+                </div>
+                
+                <div style="display: flex; flex-direction: column-reverse; font-size: 20px; line-height: 1.8;">
+            `;
+
+            // 組合每一爻的資訊
+            for(let i=0; i<6; i++) {
+                const oLine = origLinesDOM[i];
+                const cLine = chgLinesDOM[i];
+                if(!oLine) continue;
+                
+                const beast = oLine.querySelector('.beast-box').innerText;
+                const fushenHtml = oLine.querySelector('.fushen-box').innerHTML;
+                const sy = oLine.querySelector('.shi-ying-box').innerText;
+                const oSym = oLine.querySelector('.symbol-box').innerHTML;
+                const oCombo = oLine.querySelector('.combo-box').innerText;
+                const oScoreStr = oLine.querySelector('.score-box').innerText;
+                
+                // 將分數格式轉換，負分改紅色並加左右括號
+                let formattedScore = '';
+                if(oScoreStr) {
+                    if(oScoreStr.includes('(') || oScoreStr.includes('-') || oScoreStr.includes('－')) {
+                        let num = oScoreStr.replace(/\(|\)|－|-/g, ''); // 濾出純數字
+                        formattedScore = `<span style="color:#dc2626;">(－${num})</span>`;
+                    } else {
+                        formattedScore = `＋${oScoreStr}`;
+                    }
+                }
+
+            const isChanged = oLine.querySelector('.symbol-box').classList.contains('changed-red');
+            let chgPart = '';
+            
+            if (isChanged && cLine) {
+                const cCombo = cLine.querySelector('.combo-box').innerText;
+                const cSym = cLine.querySelector('.symbol-box').innerHTML;
+                chgPart = `<span style="color:#dc2626; margin: 0 10px;">==》</span><span style="color:#dc2626; width:75px; display:inline-block; text-align:center;">${cCombo}</span> <span style="color:#dc2626;">${cSym}</span>`;
+            } else if (cLine && chgName) {
+                // 靜爻的對應顯示 (隱藏箭頭以保持對齊)
+                const cCombo = cLine.querySelector('.combo-box').innerText;
+                const cSym = cLine.querySelector('.symbol-box').innerHTML;
+                chgPart = `<span style="margin: 0 10px; visibility:hidden;">==》</span><span style="width:75px; display:inline-block; text-align:center;">${cCombo}</span> <span>${cSym}</span>`;
+            }
+
+            html += `
+                <div style="display: flex; align-items: center; white-space: nowrap;">
+                    <div style="width: 50px;">${beast}</div>
+                    <div style="width: 140px; text-align: right; padding-right: 10px; font-size: 16px;">
+                        ${fushenHtml} <span style="color:#1e40af; font-weight:bold; margin-left:5px;">${sy}</span>
+                    </div>
+                    <div style="width: 100px; text-align: center; ${isChanged ? 'color:#dc2626;' : ''}">${oSym}</div>
+                    <div style="width: 120px; padding-left: 5px;">${oCombo} ${formattedScore}</div>
+                    <div style="flex: 1; display:flex; align-items:center;">${chgPart}</div>
+                </div>
+            `;
+        }
+
+        html += `</div>`;
+        captureZone.innerHTML = html;
+        document.body.appendChild(captureZone);
+
+        // 3. 執行截圖
+        html2canvas(captureZone, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            logging: false
         }).then(canvas => {
-            // 3. 截圖完成後，恢復所有隱藏的介面
-            inputSec.style.display = 'flex';
-            yongshenSelect.style.display = 'flex';
-            if(headerTitleBook) headerTitleBook.style.display = 'inline-block';
-            btn.style.display = 'flex';
-
-            // 4. 嘗試將圖片寫入系統剪貼簿
+            document.body.removeChild(captureZone); // 拍完立刻移除隱藏版面
+            
             canvas.toBlob(blob => {
                 if (blob) {
                     try {
                         const item = new ClipboardItem({ 'image/png': blob });
                         navigator.clipboard.write([item]).then(() => {
-                            // 成功寫入剪貼簿，圖示改為打勾
                             btn.innerText = '✅';
-                            setTimeout(() => {
-                                btn.innerText = '📸';
-                                btn.style.pointerEvents = 'auto';
-                            }, 2000);
+                            setTimeout(() => { btn.innerText = '📸'; btn.style.pointerEvents = 'auto'; }, 2000);
                         }).catch(err => {
-                            // 若瀏覽器(如Safari)阻擋非同步剪貼簿，則改為直接下載圖片
                             downloadCanvas(canvas, btn);
                         });
                     } catch(e) {
@@ -1357,18 +1460,13 @@
         });
     }
 
-    // 備用方案：直接下載圖片
     function downloadCanvas(canvas, btn) {
         const link = document.createElement('a');
         link.download = '卦象排盤.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
-        
         btn.innerText = '✅';
-        setTimeout(() => {
-            btn.innerText = '📸';
-            btn.style.pointerEvents = 'auto';
-        }, 2000);
+        setTimeout(() => { btn.innerText = '📸'; btn.style.pointerEvents = 'auto'; }, 2000);
     }
 // ==========================================
     // 🛡️ 網頁防護機制：防右鍵、防複製、防看原始碼

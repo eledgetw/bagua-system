@@ -1353,19 +1353,24 @@
             captureZone.style.cssText = 'position:fixed; top:-9999px; left:0; width:750px; background-color:#ffffff; padding:40px; font-family:"Microsoft JhengHei",sans-serif; color:#000000; z-index:-1000; box-sizing: border-box;';
             
             let html = `
-                <div style="font-size: 18px; margin-bottom: 10px; color: #1e40af; font-weight: bold;">${formattedDate}</div>
-                <div style="display: flex; gap: 40px; font-size: 18px; margin-bottom: 25px;">
-                    ${baziStr}
-                    <div style="display:inline-block; line-height: 1.5;">
-                        貴人：${noble}<br>
-                        桃花：${peach}<br>
-                        日空：<span style="color:#16a34a;">${empty}</span>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;">
+                    <div>
+                        <div style="font-size: 18px; margin-bottom: 10px; color: #1e40af; font-weight: bold;">${formattedDate}</div>
+                        <div style="display: flex; gap: 40px; font-size: 18px;">
+                            ${baziStr}
+                            <div style="display:inline-block; line-height: 1.5;">
+                                貴人：${noble}<br>
+                                桃花：${peach}<br>
+                                日空：<span style="color:#16a34a;">${empty}</span>
+                            </div>
+                            <div style="display:inline-block; line-height: 1.5;">
+                                驛馬：${horse}<br>
+                                羊刃：${blade}<br>
+                                用神：${yongShenValue}
+                            </div>
+                        </div>
                     </div>
-                    <div style="display:inline-block; line-height: 1.5;">
-                        驛馬：${horse}<br>
-                        羊刃：${blade}<br>
-                        用神：${yongShenValue}
-                    </div>
+                    <img src="qrcode.png" style="width: 110px; height: 110px; object-fit: contain;">
                 </div>
 
                 <div style="display: flex; font-size: 18px; margin-bottom: 15px; font-weight: bold;">

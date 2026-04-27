@@ -27,6 +27,13 @@
 🔒 隱私說明
 本系統為純前端運作，所有命盤數據僅儲存在使用者的瀏覽器本地空間 (localStorage)。開發者不會，也無法存取您的任何個人資料或八字紀錄。
 
+> **🧋 喜歡我的分享嗎？**
+>
+> 如果我的專案對你有幫助，歡迎請我喝杯珍奶！這份支持能讓我在更有動力持續分享有價值的內容。🚀
+>
+> [![請我喝珍奶](https://s3.ap-southeast-1.amazonaws.com/media.anyonelab.com/images/boba/boba-embed-icon.png)](https://eledgetw.bobaboba.me)
+
+
 ## 📬 聯絡作者 (Contact)
 
 如果您在使用上有任何建議、發現 Bug，或是對邏輯判定有疑問，歡迎透過以下方式與我聯繫：

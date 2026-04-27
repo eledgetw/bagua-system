@@ -27,11 +27,14 @@
 🔒 隱私說明
 本系統為純前端運作，所有命盤數據僅儲存在使用者的瀏覽器本地空間 (localStorage)。開發者不會，也無法存取您的任何個人資料或八字紀錄。
 
+
+## 贊助這個專案
 ✨ 喜歡這個專案嗎？ ✨
 如果這個工具為你節省了時間 ⏱️，或者對你的研究有所啟發 💡
 🧋 點擊圖示請我喝杯珍奶吧 🧋
 
 [![請我喝珍奶](https://s3.ap-southeast-1.amazonaws.com/media.anyonelab.com/images/boba/boba-embed-icon.png)](https://eledgetw.bobaboba.me) [![請我喝珍奶](https://s3.ap-southeast-1.amazonaws.com/media.anyonelab.com/images/boba/boba-embed-icon.png)](https://eledgetw.bobaboba.me) [![請我喝珍奶](https://s3.ap-southeast-1.amazonaws.com/media.anyonelab.com/images/boba/boba-embed-icon.png)](https://eledgetw.bobaboba.me)
+←←(點擊珍奶圖示贊助作者)
 這能讓程式碼持續穩定運行，也讓更多靈感不斷湧現！✨
 
 

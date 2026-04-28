@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>【老人】八卦系統</title>
     <!-- 引入 lunar.js 處理八字與曆法 -->
     <script src="https://unpkg.com/lunar-javascript/lunar.js"></script>
@@ -11,512 +11,696 @@
     <!-- 引入 html2canvas 用於完美截圖 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        :root {
-            --bg-color: #eef2f5;
-            --card-bg: #ffffff;
-            --primary-text: #000000;
-            --secondary-text: #64748b;
-            --accent-blue: #1e40af;
-            --red-text: #dc2626;
-            --border-color: #e2e8f0;
-            --highlight-bg: #f8fafc;
-        }
+      :root {
+        --bg-color: #eef2f5;
+        --card-bg: #ffffff;
+        --primary-text: #000000;
+        --secondary-text: #64748b;
+        --accent-blue: #1e40af;
+        --red-text: #dc2626;
+        --border-color: #e2e8f0;
+        --highlight-bg: #f8fafc;
+      }
 
-        body {
-            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
-            background-color: var(--bg-color);
-            color: var(--primary-text);
-            padding: 20px;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            
-            /* 👇 新增：禁止全畫面文字反白選取 */
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-        }
+      body {
+        font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+        background-color: var(--bg-color);
+        color: var(--primary-text);
+        padding: 20px;
+        margin: 0;
+        display: flex;
+        justify-content: center;
 
-        /* 👇 新增：例外開放，讓輸入框與下拉選單依然可以正常點擊與打字 */
-        input, select, textarea {
-            user-select: auto;
-            -webkit-user-select: auto;
-            -moz-user-select: auto;
-            -ms-user-select: auto;
-        }
+        /* 👇 新增：禁止全畫面文字反白選取 */
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+      }
 
-        .container {
-            width: 100%;
-            max-width: 1250px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
+      /* 👇 新增：例外開放，讓輸入框與下拉選單依然可以正常點擊與打字 */
+      input,
+      select,
+      textarea {
+        user-select: auto;
+        -webkit-user-select: auto;
+        -moz-user-select: auto;
+        -ms-user-select: auto;
+      }
 
-        .header-title {
-            text-align: center;
-            font-size: 28px;
-            font-weight: 900;
-            color: var(--accent-blue);
-            margin: 0;
-            letter-spacing: 2px;
-        }
+      .container {
+        width: 100%;
+        max-width: 1250px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
 
-        /* 頂端時間與陰曆顯示區 */
-        .time-display-area {
-            text-align: center;
-            margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
+      .header-title {
+        text-align: center;
+        font-size: 28px;
+        font-weight: 900;
+        color: var(--accent-blue);
+        margin: 0;
+        letter-spacing: 2px;
+      }
 
-        .time-picker {
-            font-size: 20px;
-            padding: 10px 15px;
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            font-weight: bold;
-            color: var(--primary-text);
-            cursor: pointer;
-        }
+      /* 頂端時間與陰曆顯示區 */
+      .time-display-area {
+        text-align: center;
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
 
-        .lunar-date {
-            font-size: 20px;
-            color: var(--accent-blue);
-            font-weight: bold;
-        }
+      .time-picker {
+        font-size: 20px;
+        padding: 10px 15px;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        font-weight: bold;
+        color: var(--primary-text);
+        cursor: pointer;
+      }
 
-        .card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            border: 1px solid var(--border-color);
-            padding: 25px;
-        }
+      .lunar-date {
+        font-size: 20px;
+        color: var(--accent-blue);
+        font-weight: bold;
+      }
 
-        /* 頂部控制與八字區塊 */
-        .top-panel {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
+      .card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--border-color);
+        padding: 25px;
+      }
 
-        .bazi-section {
-            flex: 1;
-            min-width: 450px;
-            background: var(--highlight-bg);
-            border-radius: 8px;
-            padding: 20px;
-            border: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
+      /* 頂部控制與八字區塊 */
+      .top-panel {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
 
-        /* 八字排版 (從右至左) */
-        .bazi-grid {
-            display: flex;
-            flex-direction: row-reverse;
-            justify-content: center;
-            gap: 30px;
-            padding: 15px 20px;
-            background: #ffffff;
-            border-radius: 8px;
-            border: 1px solid #cbd5e1;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
-        }
+      .bazi-section {
+        flex: 1;
+        min-width: 450px;
+        background: var(--highlight-bg);
+        border-radius: 8px;
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
 
-        .pillar {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+      /* 八字排版 (從右至左) */
+      .bazi-grid {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: center;
+        gap: 30px;
+        padding: 15px 20px;
+        background: #ffffff;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+      }
 
-        .pillar-title {
-            font-size: 16px;
-            color: var(--accent-blue); /* 藍色字體 */
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
+      .pillar {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
 
-        .stem, .branch { 
-            color: #000000; 
-            font-size: 26px; 
-            font-weight: 900; 
-        }
-        
-        .branch { margin-top: 5px; }
+      .pillar-title {
+        font-size: 16px;
+        color: var(--accent-blue); /* 藍色字體 */
+        margin-bottom: 8px;
+        font-weight: bold;
+      }
 
-        /* 神煞顯示區 */
-        .shensha-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            font-size: 19px;
-            font-weight: bold;
-            color: var(--primary-text);
-        }
+      .stem,
+      .branch {
+        color: #000000;
+        font-size: 26px;
+        font-weight: 900;
+      }
 
-        .shensha-item {
-            display: flex;
-            gap: 8px;
-        }
+      .branch {
+        margin-top: 5px;
+      }
 
-        .shensha-label {
-            color: var(--secondary-text);
-            font-weight: normal;
-        }
+      /* 神煞顯示區 */
+      .shensha-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        font-size: 19px;
+        font-weight: bold;
+        color: var(--primary-text);
+      }
 
-        /* 數字輸入區 */
-        .input-section {
-            width: 320px;
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+      .shensha-item {
+        display: flex;
+        gap: 8px;
+      }
 
-        /* 模式切換按鈕群組 */
-        .mode-btn-group {
-            display: flex;
-            gap: 10px;
-            width: 100%;
-        }
+      .shensha-label {
+        color: var(--secondary-text);
+        font-weight: normal;
+      }
 
-        .mode-btn {
-            flex: 1;
-            padding: 12px 0;
-            font-size: 18px;
-            font-weight: bold;
-            border: 2px solid #cbd5e1;
-            border-radius: 8px;
-            background-color: #f1f5f9;
-            color: var(--secondary-text);
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-        }
+      /* 數字輸入區 */
+      .input-section {
+        width: 320px;
+        background: #ffffff;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
 
-        .mode-btn:hover {
-            background-color: #e2e8f0;
-        }
+      /* 模式切換按鈕群組 */
+      .mode-btn-group {
+        display: flex;
+        gap: 10px;
+        width: 100%;
+      }
 
-        .mode-btn.active {
-            background-color: var(--accent-blue);
-            color: #ffffff;
-            border-color: var(--accent-blue);
-            box-shadow: 0 3px 8px rgba(30, 64, 175, 0.25);
-        }
+      .mode-btn {
+        flex: 1;
+        padding: 12px 0;
+        font-size: 18px;
+        font-weight: bold;
+        border: 2px solid #cbd5e1;
+        border-radius: 8px;
+        background-color: #f1f5f9;
+        color: var(--secondary-text);
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+      }
 
-        .yao-input-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
+      .mode-btn:hover {
+        background-color: #e2e8f0;
+      }
 
-        .yao-input-row label { font-weight: bold; color: var(--primary-text); font-size: 16px; }
-        .yao-input-row input {
-            width: 80px;
-            padding: 8px;
-            text-align: center;
-            border: 2px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 18px;
-            font-weight: bold;
-            color: var(--primary-text);
-        }
+      .mode-btn.active {
+        background-color: var(--accent-blue);
+        color: #ffffff;
+        border-color: var(--accent-blue);
+        box-shadow: 0 3px 8px rgba(30, 64, 175, 0.25);
+      }
 
-        /* 太極丸點擊按鈕樣式 */
-        .taiji-btn-group {
-            display: flex;
-            gap: 6px;
-        }
+      .yao-input-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
 
-        .taiji-btn {
-            width: 42px;
-            height: 40px;
-            border: 2px solid #cbd5e1;
-            border-radius: 6px;
-            background: #f8fafc;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            color: var(--primary-text);
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-        }
+      .yao-input-row label {
+        font-weight: bold;
+        color: var(--primary-text);
+        font-size: 16px;
+      }
+      .yao-input-row input {
+        width: 80px;
+        padding: 8px;
+        text-align: center;
+        border: 2px solid #cbd5e1;
+        border-radius: 6px;
+        font-size: 18px;
+        font-weight: bold;
+        color: var(--primary-text);
+      }
 
-        .taiji-btn:hover {
-            border-color: #94a3b8;
-            background: #e2e8f0;
-        }
+      /* 太極丸點擊按鈕樣式 */
+      .taiji-btn-group {
+        display: flex;
+        gap: 6px;
+      }
 
-        .taiji-btn.active {
-            background: var(--accent-blue);
-            color: #ffffff;
-            border-color: var(--accent-blue);
-            box-shadow: 0 2px 4px rgba(30, 64, 175, 0.3);
-        }
+      .taiji-btn {
+        width: 42px;
+        height: 40px;
+        border: 2px solid #cbd5e1;
+        border-radius: 6px;
+        background: #f8fafc;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        color: var(--primary-text);
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+      }
 
-        /* 隨機太極丸按鈕 */
-        .random-taiji-btn {
-            background-color: #f59e0b;
-            color: #ffffff;
-            border-color: #f59e0b;
-            padding: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-top: 5px;
-            width: 100%;
-        }
+      .taiji-btn:hover {
+        border-color: #94a3b8;
+        background: #e2e8f0;
+      }
 
-        .random-taiji-btn:hover {
-            background-color: #d97706;
-        }
+      .taiji-btn.active {
+        background: var(--accent-blue);
+        color: #ffffff;
+        border-color: var(--accent-blue);
+        box-shadow: 0 2px 4px rgba(30, 64, 175, 0.3);
+      }
 
-        /* 卦象顯示區 */
-        .gua-display-area {
-            display: flex;
-            justify-content: center;
-            gap: 15px; 
-            margin-top: 10px;
-            padding-top: 30px;
-            border-top: 2px dashed var(--border-color);
-        }
+      /* 隨機太極丸按鈕 */
+      .random-taiji-btn {
+        background-color: #f59e0b;
+        color: #ffffff;
+        border-color: #f59e0b;
+        padding: 10px;
+        font-size: 18px;
+        font-weight: bold;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-top: 5px;
+        width: 100%;
+      }
 
-        .gua-wrapper {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+      .random-taiji-btn:hover {
+        background-color: #d97706;
+      }
 
-        .gua-title-box {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+      /* 卦象顯示區 */
+      .gua-display-area {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 10px;
+        padding-top: 30px;
+        border-top: 2px dashed var(--border-color);
+      }
 
-        .gua-name { font-size: 32px; font-weight: 900; color: var(--accent-blue); }
-        .gua-palace { font-size: 18px; color: var(--secondary-text); margin-top: 8px; font-weight: bold; }
+      .gua-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
 
-        .lines-container {
-            display: flex;
-            flex-direction: column-reverse; /* 六爻從下至上排列 */
-            gap: 4px; /* 縮小行距 */
-        }
+      .gua-title-box {
+        text-align: center;
+        margin-bottom: 20px;
+      }
 
-        /* 確保不換行排版核心 */
-        .line-row {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 20px;
-            font-weight: bold;
-            height: 30px; /* 縮小列高，讓排版緊湊 */
-            color: var(--primary-text);
-            white-space: nowrap; 
-        }
-        
-        .line-row > div {
-            flex-shrink: 0; /* 絕對禁止內容被壓縮而換行 */
-            white-space: nowrap;
-        }
+      .gua-name {
+        font-size: 32px;
+        font-weight: 900;
+        color: var(--accent-blue);
+      }
+      .gua-palace {
+        font-size: 18px;
+        color: var(--secondary-text);
+        margin-top: 8px;
+        font-weight: bold;
+      }
 
-        /* 改用 width 強制鎖定寬度，確保所有爻位嚴格上下對齊不跑版 */
-        .beast-box { width: 50px; text-align: center; }
-        .shi-ying-box { width: 35px; text-align: center; color: var(--accent-blue); }
-        .symbol-box { 
-            width: 100px; /* 稍微加寬以容納方塊 */
-            font-size: 24px; 
-            font-weight: normal; /* 方塊字元不需加粗 */
-            text-align: center; 
-            letter-spacing: 0; /* 確保方塊之間沒有縫隙 */
-            line-height: 1;
-        }
-        
-        .changed-red { color: var(--red-text); }
+      .lines-container {
+        display: flex;
+        flex-direction: column-reverse; /* 六爻從下至上排列 */
+        gap: 4px; /* 縮小行距 */
+      }
 
-        /* 整合後的「六親+地支+五行」容器 */
-        .combo-box { width: 75px; text-align: center; }
-        
-        .score-box {
-            width: 50px;
-            text-align: right;
-            font-size: 22px;
-        }
-        .score-negative { color: var(--red-text); }
+      /* 確保不換行排版核心 */
+      .line-row {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 20px;
+        font-weight: bold;
+        height: 30px; /* 縮小列高，讓排版緊湊 */
+        color: var(--primary-text);
+        white-space: nowrap;
+      }
 
-        .note-box { width: 170px; color: var(--red-text); font-size: 18px; margin-left: 10px; }
-        .fushen-box { width: 140px; font-size: 18px; text-align: right; margin-right: 15px; }
+      .line-row > div {
+        flex-shrink: 0; /* 絕對禁止內容被壓縮而換行 */
+        white-space: nowrap;
+      }
 
-        /* 卦理彈窗與 Excel 表格渲染樣式 */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(15, 23, 42, 0.6);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(3px);
-        }
-        .modal-box {
-            background-color: #ffffff;
-            padding: 30px 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            border: 1px solid #e2e8f0;
-            position: relative;
-            width: 90%;
-            max-width: 950px;
-            max-height: 85vh;
-            overflow-y: auto;
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        @keyframes popIn {
-            0% { transform: scale(0.9); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        .close-btn {
-            position: absolute;
-            top: 15px; right: 20px;
-            font-size: 28px;
-            cursor: pointer;
-            background: none; border: none; color: #64748b;
-            transition: color 0.2s;
-        }
-        .close-btn:hover { color: #dc2626; }
-        
-        .guali-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 25px;
-            font-size: 16px;
-            color: #334155;
-        }
-        .guali-table th, .guali-table td {
-            border: 1px solid #cbd5e1;
-            padding: 12px;
-            text-align: left;
-            line-height: 1.5;
-            vertical-align: top;
-            word-break: break-word;
-        }
-        .guali-table th {
-            background-color: #f1f5f9;
-            color: #1e40af;
-            font-weight: bold;
-        }
-        .guali-table th.section-title-cell {
-            font-size: 22px;
-            background-color: #e2e8f0;
-            color: #0f172a;
-            text-align: center;
-            padding: 16px;
-        }
+      /* 改用 width 強制鎖定寬度，確保所有爻位嚴格上下對齊不跑版 */
+      .beast-box {
+        width: 50px;
+        text-align: center;
+      }
+      .shi-ying-box {
+        width: 35px;
+        text-align: center;
+        color: var(--accent-blue);
+      }
+      .symbol-box {
+        width: 100px; /* 稍微加寬以容納方塊 */
+        font-size: 24px;
+        font-weight: normal; /* 方塊字元不需加粗 */
+        text-align: center;
+        letter-spacing: 0; /* 確保方塊之間沒有縫隙 */
+        line-height: 1;
+      }
 
-        /* 懸浮相機複製按鈕樣式 */
-        .fab-copy-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            background-color: #ffffff; /* 白底 */
-            color: #000000;
-            border: 2px solid #cbd5e1; /* 淡邊框 */
-            border-radius: 50%;
-            font-size: 28px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 1000;
-        }
+      .changed-red {
+        color: var(--red-text);
+      }
 
-        .fab-copy-btn:hover {
-            transform: scale(1.15);
-            background-color: #f8fafc;
-        }
+      /* 整合後的「六親+地支+五行」容器 */
+      .combo-box {
+        width: 75px;
+        text-align: center;
+      }
 
-        .fab-copy-btn:active {
-            transform: scale(0.95);
+      .score-box {
+        width: 50px;
+        text-align: right;
+        font-size: 22px;
+      }
+      .score-negative {
+        color: var(--red-text);
+      }
+
+      .note-box {
+        width: 170px;
+        color: var(--red-text);
+        font-size: 18px;
+        margin-left: 10px;
+      }
+      .fushen-box {
+        width: 140px;
+        font-size: 18px;
+        text-align: right;
+        margin-right: 15px;
+      }
+
+      /* 卦理彈窗與 Excel 表格渲染樣式 */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(15, 23, 42, 0.6);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(3px);
+      }
+      .modal-box {
+        background-color: #ffffff;
+        padding: 30px 40px;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        border: 1px solid #e2e8f0;
+        position: relative;
+        width: 90%;
+        max-width: 950px;
+        max-height: 85vh;
+        overflow-y: auto;
+        animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      @keyframes popIn {
+        0% {
+          transform: scale(0.9);
+          opacity: 0;
         }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      .close-btn {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        font-size: 28px;
+        cursor: pointer;
+        background: none;
+        border: none;
+        color: #64748b;
+        transition: color 0.2s;
+      }
+      .close-btn:hover {
+        color: #dc2626;
+      }
+
+      .guali-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 25px;
+        font-size: 16px;
+        color: #334155;
+      }
+      .guali-table th,
+      .guali-table td {
+        border: 1px solid #cbd5e1;
+        padding: 12px;
+        text-align: left;
+        line-height: 1.5;
+        vertical-align: top;
+        word-break: break-word;
+      }
+      .guali-table th {
+        background-color: #f1f5f9;
+        color: #1e40af;
+        font-weight: bold;
+      }
+      .guali-table th.section-title-cell {
+        font-size: 22px;
+        background-color: #e2e8f0;
+        color: #0f172a;
+        text-align: center;
+        padding: 16px;
+      }
+
+      /* 懸浮相機複製按鈕樣式 */
+      .fab-copy-btn {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 60px;
+        height: 60px;
+        background-color: #ffffff; /* 白底 */
+        color: #000000;
+        border: 2px solid #cbd5e1; /* 淡邊框 */
+        border-radius: 50%;
+        font-size: 28px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        z-index: 1000;
+      }
+
+      .fab-copy-btn:hover {
+        transform: scale(1.15);
+        background-color: #f8fafc;
+      }
+
+      .fab-copy-btn:active {
+        transform: scale(0.95);
+      }
     </style>
-</head>
-<body>
-
-<div class="container">
-    <h1 class="header-title">
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="header-title">
         【老人】八卦系統
-        <a href="javascript:void(0);" onclick="openGualiModal()" style="text-decoration: none; font-size: 26px; vertical-align: middle; margin-left: 8px; transition: transform 0.2s; display: inline-block;" title="查看卦理參考" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">📘</a>
-    </h1>
+        <a
+          href="javascript:void(0);"
+          onclick="openGualiModal()"
+          style="
+            text-decoration: none;
+            font-size: 26px;
+            vertical-align: middle;
+            margin-left: 8px;
+            transition: transform 0.2s;
+            display: inline-block;
+          "
+          title="查看卦理參考"
+          onmouseover="this.style.transform = 'scale(1.1)'"
+          onmouseout="this.style.transform = 'scale(1)'"
+          >📘</a
+        >
+      </h1>
 
-    <div class="time-display-area">
-        <input type="datetime-local" class="time-picker" id="dt-input" onchange="calculateAll()">
+      <div class="time-display-area">
+        <input
+          type="datetime-local"
+          class="time-picker"
+          id="dt-input"
+          onchange="calculateAll()"
+        />
         <span class="lunar-date" id="lunar-date-display"></span>
-    </div>
+      </div>
 
-    <div class="top-panel">
+      <div class="top-panel">
         <div class="bazi-section">
-            <div style="display: flex; gap: 20px; align-items: stretch; justify-content: center; flex-wrap: wrap;">
-                <div class="bazi-grid" id="bazi-grid" style="flex: 1; margin: 0;">
-                    </div>
-                
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: #ffffff; padding: 15px 25px; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
-                    <label style="font-size: 18px; font-weight: bold; color: var(--accent-blue);">用神</label>
-                    <select id="yongshen-select" onchange="calculateAll()" style="font-size: 20px; padding: 6px 10px; font-weight: bold; color: var(--red-text); border: 2px solid #e2e8f0; border-radius: 6px; cursor: pointer; text-align: center; background: #f8fafc;">
-                        <option value="父母">父母</option>
-                        <option value="兄弟">兄弟</option>
-                        <option value="子孫">子孫</option>
-                        <option value="財妻" selected>財妻</option>
-                        <option value="官鬼">官鬼</option>
-                    </select>
-                </div>
-            </div>
+          <div
+            style="
+              display: flex;
+              gap: 20px;
+              align-items: stretch;
+              justify-content: center;
+              flex-wrap: wrap;
+            "
+          >
+            <div
+              class="bazi-grid"
+              id="bazi-grid"
+              style="flex: 1; margin: 0"
+            ></div>
 
-            <div class="shensha-grid" id="shensha-grid">
-                </div>
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                background: #ffffff;
+                padding: 15px 25px;
+                border-radius: 8px;
+                border: 1px solid #cbd5e1;
+                box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+              "
+            >
+              <label
+                style="
+                  font-size: 18px;
+                  font-weight: bold;
+                  color: var(--accent-blue);
+                "
+                >用神</label
+              >
+              <select
+                id="yongshen-select"
+                onchange="calculateAll()"
+                style="
+                  font-size: 20px;
+                  padding: 6px 10px;
+                  font-weight: bold;
+                  color: var(--red-text);
+                  border: 2px solid #e2e8f0;
+                  border-radius: 6px;
+                  cursor: pointer;
+                  text-align: center;
+                  background: #f8fafc;
+                "
+              >
+                <option value="父母">父母</option>
+                <option value="兄弟">兄弟</option>
+                <option value="子孫">子孫</option>
+                <option value="財妻" selected>財妻</option>
+                <option value="官鬼">官鬼</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="shensha-grid" id="shensha-grid"></div>
         </div>
 
         <div class="input-section">
-            
-            <div class="mode-btn-group">
-                <button class="mode-btn" id="btn-threenum" onclick="setMode('threenum')">三數字</button>
-                <button class="mode-btn" id="btn-taiji" onclick="setMode('taiji')">太極丸</button>
-                <button class="mode-btn" id="btn-random" onclick="generateRandomGua()">隨機卦</button>
-            </div>
+          <div class="mode-btn-group">
+            <button
+              class="mode-btn"
+              id="btn-threenum"
+              onclick="setMode('threenum')"
+            >
+              三數字
+            </button>
+            <button class="mode-btn" id="btn-taiji" onclick="setMode('taiji')">
+              太極丸
+            </button>
+            <button
+              class="mode-btn"
+              id="btn-random"
+              onclick="generateRandomGua()"
+            >
+              隨機卦
+            </button>
+          </div>
 
-            <div id="threenum-inputs" style="display: flex; flex-direction: column; gap: 12px;">
-                <div class="yao-input-row"><label>下卦</label><input type="number" id="num-1" value="" oninput="calculateAll()"></div>
-                <div class="yao-input-row"><label>上卦</label><input type="number" id="num-2" value="" oninput="calculateAll()"></div>
-                <div class="yao-input-row"><label>動爻</label><input type="number" id="num-3" value="" oninput="calculateAll()"></div>
+          <div
+            id="threenum-inputs"
+            style="display: flex; flex-direction: column; gap: 12px"
+          >
+            <div class="yao-input-row">
+              <label>下卦</label
+              ><input
+                type="number"
+                id="num-1"
+                value=""
+                oninput="calculateAll()"
+              />
             </div>
+            <div class="yao-input-row">
+              <label>上卦</label
+              ><input
+                type="number"
+                id="num-2"
+                value=""
+                oninput="calculateAll()"
+              />
+            </div>
+            <div class="yao-input-row">
+              <label>動爻</label
+              ><input
+                type="number"
+                id="num-3"
+                value=""
+                oninput="calculateAll()"
+              />
+            </div>
+          </div>
 
-            <div id="taiji-inputs" style="display: none; flex-direction: column; gap: 14px;">
-                <div style="font-size: 14px; color: #64748b; text-align: center; margin-top: -5px; margin-bottom: 5px;">(6:陰變陽, 7:陽靜, 8:陰靜, 9:陽變陰)</div>
-                <script>
-                    for(let i=6; i>=1; i--) {
-                        let labelName = i === 6 ? '六爻' : (i === 5 ? '五爻' : (i === 4 ? '四爻' : (i === 3 ? '三爻' : (i === 2 ? '二爻' : '初爻'))));
-                        document.write(`
+          <div
+            id="taiji-inputs"
+            style="display: none; flex-direction: column; gap: 14px"
+          >
+            <div
+              style="
+                font-size: 14px;
+                color: #64748b;
+                text-align: center;
+                margin-top: -5px;
+                margin-bottom: 5px;
+              "
+            >
+              (6:陰變陽, 7:陽靜, 8:陰靜, 9:陽變陰)
+            </div>
+            <script>
+              for (let i = 6; i >= 1; i--) {
+                let labelName =
+                  i === 6
+                    ? "六爻"
+                    : i === 5
+                      ? "五爻"
+                      : i === 4
+                        ? "四爻"
+                        : i === 3
+                          ? "三爻"
+                          : i === 2
+                            ? "二爻"
+                            : "初爻";
+                document.write(`
                             <div class="yao-input-row">
                                 <label>${labelName}</label>
                                 <div class="taiji-btn-group" id="taiji-group-${i}">
@@ -527,245 +711,463 @@
                                 </div>
                             </div>
                         `);
-                    }
-                </script>
-                <button class="random-taiji-btn" onclick="generateRandomTaiji()">隨機丸</button>
-            </div>
+              }
+            </script>
+            <button class="random-taiji-btn" onclick="generateRandomTaiji()">
+              隨機丸
+            </button>
+          </div>
         </div>
-    </div>
+      </div>
 
-    <div class="card gua-display-area">
+      <div class="card gua-display-area">
         <div class="gua-wrapper" id="gua-original"></div>
-        <div class="gua-wrapper" id="gua-changed"></div> 
+        <div class="gua-wrapper" id="gua-changed"></div>
+      </div>
     </div>
-</div>
 
-<div id="guali-modal" class="modal-overlay">
-    <div class="modal-box">
+    <div id="guali-modal" class="modal-overlay">
+      <div class="modal-box">
         <button class="close-btn" onclick="closeGualiModal()">✖</button>
-        <h2 style="text-align: center; color: #1e40af; margin-top: 0; margin-bottom: 20px;">📘 基礎卦理參考</h2>
-        <div id="guali-content">
-            </div>
+        <h2
+          style="
+            text-align: center;
+            color: #1e40af;
+            margin-top: 0;
+            margin-bottom: 20px;
+          "
+        >
+          📘 基礎卦理參考
+        </h2>
+        <div id="guali-content"></div>
+      </div>
     </div>
-</div>
 
-<script>
-    // --- 動態讀取 卦理.xlsx 檔案並渲染 ---
-    let gualiLoaded = false;
+    <script>
+      // --- 動態讀取 卦理.xlsx 檔案並渲染 ---
+      let gualiLoaded = false;
 
-    async function loadGualiExcel() {
-        const container = document.getElementById('guali-content');
-        container.innerHTML = '<div style="text-align:center; padding: 20px; color:#64748b; font-size: 18px;">正在讀取 <code>卦理.xlsx</code>...<br><span style="font-size:14px;">(請確認檔案已放置於同一資料夾)</span></div>';
-        
+      async function loadGualiExcel() {
+        const container = document.getElementById("guali-content");
+        container.innerHTML =
+          '<div style="text-align:center; padding: 20px; color:#64748b; font-size: 18px;">正在讀取 <code>卦理.xlsx</code>...<br><span style="font-size:14px;">(請確認檔案已放置於同一資料夾)</span></div>';
+
         try {
-            // 加時間戳防止瀏覽器快取舊的 Excel 檔案
-            const response = await fetch('卦理.xlsx?t=' + new Date().getTime());
-            if (!response.ok) throw new Error('檔案讀取失敗，可能是檔案不存在或名稱錯誤。');
-            
-            const arrayBuffer = await response.arrayBuffer();
-            const data = new Uint8Array(arrayBuffer);
-            const workbook = XLSX.read(data, {type: 'array'});
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            
-            // 轉為二維陣列 (Array of arrays)
-            const rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-            
-            let html = '<table class="guali-table">';
-            for (let i = 0; i < rows.length; i++) {
-                let row = rows[i];
-                // 判斷是否為純空行
-                if (!row || row.length === 0 || row.every(c => c === null || c === undefined || String(c).trim() === '')) {
-                    html += '<tr><td colspan="10" style="border:none; height:20px; background: transparent;"></td></tr>';
-                    continue;
-                }
-                
-                let cleanRow = row.filter(c => c !== undefined && c !== null && String(c).trim() !== '');
-                html += '<tr>';
-                
-                // 如果該列只有第一格有文字，視為大標題
-                if (cleanRow.length === 1 && row[0]) {
-                    html += `<th colspan="10" class="section-title-cell">${row[0]}</th>`;
-                } else {
-                    // 找出此行實際有資料的最大欄數，確保表格邊界漂亮
-                    let maxCol = row.length;
-                    while(maxCol > 0 && (row[maxCol-1] === undefined || row[maxCol-1] === null || String(row[maxCol-1]).trim() === '')) {
-                        maxCol--;
-                    }
-                    
-                    for (let j = 0; j < maxCol; j++) {
-                        let cell = row[j] !== undefined && row[j] !== null ? String(row[j]).replace(/\n/g, '<br>') : '';
-                        
-                        if (j === 0) {
-                            html += `<th style="width: 140px; min-width: 120px; white-space: pre-wrap;">${cell}</th>`;
-                        } else if (j === maxCol - 1) {
-                            // 該列的最後一格，自動跨欄填滿右側剩餘空間
-                            let colspan = 10 - maxCol + 1;
-                            html += `<td colspan="${colspan}">${cell}</td>`;
-                        } else {
-                            html += `<td>${cell}</td>`;
-                        }
-                    }
-                }
-                html += '</tr>';
+          // 加時間戳防止瀏覽器快取舊的 Excel 檔案
+          const response = await fetch("卦理.xlsx?t=" + new Date().getTime());
+          if (!response.ok)
+            throw new Error("檔案讀取失敗，可能是檔案不存在或名稱錯誤。");
+
+          const arrayBuffer = await response.arrayBuffer();
+          const data = new Uint8Array(arrayBuffer);
+          const workbook = XLSX.read(data, { type: "array" });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+
+          // 轉為二維陣列 (Array of arrays)
+          const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+          let html = '<table class="guali-table">';
+          for (let i = 0; i < rows.length; i++) {
+            let row = rows[i];
+            // 判斷是否為純空行
+            if (
+              !row ||
+              row.length === 0 ||
+              row.every(
+                (c) => c === null || c === undefined || String(c).trim() === "",
+              )
+            ) {
+              html +=
+                '<tr><td colspan="10" style="border:none; height:20px; background: transparent;"></td></tr>';
+              continue;
             }
-            html += '</table>';
-            container.innerHTML = html;
-            gualiLoaded = true;
+
+            let cleanRow = row.filter(
+              (c) => c !== undefined && c !== null && String(c).trim() !== "",
+            );
+            html += "<tr>";
+
+            // 如果該列只有第一格有文字，視為大標題
+            if (cleanRow.length === 1 && row[0]) {
+              html += `<th colspan="10" class="section-title-cell">${row[0]}</th>`;
+            } else {
+              // 找出此行實際有資料的最大欄數，確保表格邊界漂亮
+              let maxCol = row.length;
+              while (
+                maxCol > 0 &&
+                (row[maxCol - 1] === undefined ||
+                  row[maxCol - 1] === null ||
+                  String(row[maxCol - 1]).trim() === "")
+              ) {
+                maxCol--;
+              }
+
+              for (let j = 0; j < maxCol; j++) {
+                let cell =
+                  row[j] !== undefined && row[j] !== null
+                    ? String(row[j]).replace(/\n/g, "<br>")
+                    : "";
+
+                if (j === 0) {
+                  html += `<th style="width: 140px; min-width: 120px; white-space: pre-wrap;">${cell}</th>`;
+                } else if (j === maxCol - 1) {
+                  // 該列的最後一格，自動跨欄填滿右側剩餘空間
+                  let colspan = 10 - maxCol + 1;
+                  html += `<td colspan="${colspan}">${cell}</td>`;
+                } else {
+                  html += `<td>${cell}</td>`;
+                }
+              }
+            }
+            html += "</tr>";
+          }
+          html += "</table>";
+          container.innerHTML = html;
+          gualiLoaded = true;
         } catch (error) {
-            console.error('Error loading Excel:', error);
-            container.innerHTML = `<div style="text-align:center; color:red; padding: 20px; line-height: 1.6; border: 1px dashed red; border-radius: 8px;">
+          console.error("Error loading Excel:", error);
+          container.innerHTML = `<div style="text-align:center; color:red; padding: 20px; line-height: 1.6; border: 1px dashed red; border-radius: 8px;">
                 <b>無法讀取「卦理.xlsx」</b><br><br>
                 請確認檔案已命名為 <code>卦理.xlsx</code>，並與此網頁放在同一個資料夾中。<br><br>
                 <span style="font-size:14px; color:#64748b;">(註：基於瀏覽器安全性限制，若直接雙擊 HTML 開啟可能無法讀取本地檔案，建議您透過 NAS Web Station 或伺服器網址瀏覽)</span>
             </div>`;
-            gualiLoaded = false;
+          gualiLoaded = false;
         }
-    }
+      }
 
-    // --- 卦理彈窗邏輯 ---
-    function openGualiModal() {
-        document.getElementById('guali-modal').style.display = 'flex';
+      // --- 卦理彈窗邏輯 ---
+      function openGualiModal() {
+        document.getElementById("guali-modal").style.display = "flex";
         if (!gualiLoaded) {
-            loadGualiExcel(); // 只有在沒載入過時才去抓取 Excel
+          loadGualiExcel(); // 只有在沒載入過時才去抓取 Excel
         }
-    }
-    
-    function closeGualiModal() {
-        document.getElementById('guali-modal').style.display = 'none';
-    }
-    
-    window.onclick = function(event) {
-        const modal = document.getElementById('guali-modal');
+      }
+
+      function closeGualiModal() {
+        document.getElementById("guali-modal").style.display = "none";
+      }
+
+      window.onclick = function (event) {
+        const modal = document.getElementById("guali-modal");
         if (event.target == modal) {
-            modal.style.display = "none";
+          modal.style.display = "none";
         }
-    }
+      };
 
-    // --- 輸入模式狀態管理 ---
-    let currentMode = 'threenum'; // 內部預設起卦邏輯，但按鈕視覺不反白
+      // --- 輸入模式狀態管理 ---
+      let currentMode = "threenum"; // 內部預設起卦邏輯，但按鈕視覺不反白
 
-    function setMode(mode) {
+      function setMode(mode) {
         currentMode = mode;
-        document.getElementById('btn-threenum').classList.toggle('active', mode === 'threenum');
-        document.getElementById('btn-taiji').classList.toggle('active', mode === 'taiji');
-        document.getElementById('btn-random').classList.remove('active'); // 取消隨機按鈕反白
-        
-        if (mode === 'threenum') {
-            document.getElementById('threenum-inputs').style.display = 'flex';
-            document.getElementById('taiji-inputs').style.display = 'none';
+        document
+          .getElementById("btn-threenum")
+          .classList.toggle("active", mode === "threenum");
+        document
+          .getElementById("btn-taiji")
+          .classList.toggle("active", mode === "taiji");
+        document.getElementById("btn-random").classList.remove("active"); // 取消隨機按鈕反白
+
+        if (mode === "threenum") {
+          document.getElementById("threenum-inputs").style.display = "flex";
+          document.getElementById("taiji-inputs").style.display = "none";
         } else {
-            document.getElementById('threenum-inputs').style.display = 'none';
-            document.getElementById('taiji-inputs').style.display = 'flex';
+          document.getElementById("threenum-inputs").style.display = "none";
+          document.getElementById("taiji-inputs").style.display = "flex";
         }
         calculateAll();
-    }
+      }
 
-    // --- 隨機卦功能 ---
-    function generateRandomGua() {
-        currentMode = 'threenum'; // 背景採用三數字邏輯
-        
+      // --- 隨機卦功能 ---
+      function generateRandomGua() {
+        currentMode = "threenum"; // 背景採用三數字邏輯
+
         // 視覺：只反白隨機卦按鈕
-        document.getElementById('btn-threenum').classList.remove('active');
-        document.getElementById('btn-taiji').classList.remove('active');
-        document.getElementById('btn-random').classList.add('active');
-        
+        document.getElementById("btn-threenum").classList.remove("active");
+        document.getElementById("btn-taiji").classList.remove("active");
+        document.getElementById("btn-random").classList.add("active");
+
         // 顯示三數字輸入框
-        document.getElementById('threenum-inputs').style.display = 'flex';
-        document.getElementById('taiji-inputs').style.display = 'none';
+        document.getElementById("threenum-inputs").style.display = "flex";
+        document.getElementById("taiji-inputs").style.display = "none";
 
         // 幫用戶自動填寫三組數字 (例如 100~999 之間的亂數)
-        document.getElementById('num-1').value = Math.floor(Math.random() * 900) + 100;
-        document.getElementById('num-2').value = Math.floor(Math.random() * 900) + 100;
-        document.getElementById('num-3').value = Math.floor(Math.random() * 900) + 100;
-        
-        calculateAll();
-    }
+        document.getElementById("num-1").value =
+          Math.floor(Math.random() * 900) + 100;
+        document.getElementById("num-2").value =
+          Math.floor(Math.random() * 900) + 100;
+        document.getElementById("num-3").value =
+          Math.floor(Math.random() * 900) + 100;
 
-    // --- 隨機太極丸功能 ---
-    function generateRandomTaiji() {
-        currentMode = 'taiji';
-        for(let i=1; i<=6; i++) {
-            taijiValues[i-1] = Math.floor(Math.random() * 4) + 6; // 產生 6~9
+        calculateAll();
+      }
+
+      // --- 隨機太極丸功能 ---
+      function generateRandomTaiji() {
+        currentMode = "taiji";
+        for (let i = 1; i <= 6; i++) {
+          taijiValues[i - 1] = Math.floor(Math.random() * 4) + 6; // 產生 6~9
         }
         renderTaijiButtons();
         calculateAll();
-    }
+      }
 
-    // --- 太極丸輸入狀態 ---
-    let taijiValues = [null, null, null, null, null, null]; 
+      // --- 太極丸輸入狀態 ---
+      let taijiValues = [null, null, null, null, null, null];
 
-    function setTaiji(line, val) {
+      function setTaiji(line, val) {
         taijiValues[line - 1] = val;
         renderTaijiButtons();
         calculateAll();
-    }
+      }
 
-    function renderTaijiButtons() {
-        for(let i=1; i<=6; i++) {
-            let val = taijiValues[i-1];
-            let group = document.getElementById(`taiji-group-${i}`);
-            if (group) {
-                let btns = group.querySelectorAll('.taiji-btn');
-                btns.forEach(btn => {
-                    if (parseInt(btn.innerText) === val) btn.classList.add('active');
-                    else btn.classList.remove('active');
-                });
-            }
+      function renderTaijiButtons() {
+        for (let i = 1; i <= 6; i++) {
+          let val = taijiValues[i - 1];
+          let group = document.getElementById(`taiji-group-${i}`);
+          if (group) {
+            let btns = group.querySelectorAll(".taiji-btn");
+            btns.forEach((btn) => {
+              if (parseInt(btn.innerText) === val) btn.classList.add("active");
+              else btn.classList.remove("active");
+            });
+          }
         }
-    }
+      }
 
-    // --- 基礎五行與地支對應 ---
-    const elements = { '子':'水','丑':'土','寅':'木','卯':'木','辰':'土','巳':'火','午':'火','未':'土','申':'金','酉':'金','戌':'土','亥':'水' };
-    const elementsArr = ['木','火','土','金','水'];
-    const branches = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
-    
-    // --- 八卦矩陣與屬性 ---
-    const triNames = ['坤','震','坎','兌','艮','離','巽','乾'];
-    const triElements = ['土','木','水','金','土','火','木','金'];
-    const guaMatrix = [
-        ["坤為地", "地雷復", "地水師", "地澤臨", "地山謙", "地火明夷", "地風升", "地天泰"],
-        ["雷地豫", "震為雷", "雷水解", "雷澤歸妹", "雷山小過", "雷火豐", "雷風恆", "雷天大壯"],
-        ["水地比", "水雷屯", "坎為水", "水澤節", "水山蹇", "水火既濟", "水風井", "水天需"],
-        ["澤地萃", "澤雷隨", "澤水困", "兌為澤", "澤山咸", "澤火革", "澤風大過", "澤天夬"],
-        ["山地剝", "山雷頤", "山水蒙", "山澤損", "艮為山", "山火賁", "山風蠱", "山天大畜"],
-        ["火地晉", "火雷噬嗑", "火水未濟", "火澤睽", "火山旅", "離為火", "火風鼎", "火天大有"],
-        ["風地觀", "風雷益", "風水渙", "風澤中孚", "風山漸", "風火家人", "巽為風", "風天小畜"],
-        ["天地否", "天雷無妄", "天水訟", "天澤履", "天山遯", "天火同人", "天風姤", "乾為天"]
-    ];
+      // --- 基礎五行與地支對應 ---
+      const elements = {
+        子: "水",
+        丑: "土",
+        寅: "木",
+        卯: "木",
+        辰: "土",
+        巳: "火",
+        午: "火",
+        未: "土",
+        申: "金",
+        酉: "金",
+        戌: "土",
+        亥: "水",
+      };
+      const elementsArr = ["木", "火", "土", "金", "水"];
+      const branches = [
+        "子",
+        "丑",
+        "寅",
+        "卯",
+        "辰",
+        "巳",
+        "午",
+        "未",
+        "申",
+        "酉",
+        "戌",
+        "亥",
+      ];
 
-    // --- 源流八純卦爻位與六親表 (用於伏神查找) ---
-    const pureHexagramLines = {
-        0: [ {kin:'兄', b:'丑'}, {kin:'財', b:'亥'}, {kin:'孫', b:'酉'}, {kin:'兄', b:'未'}, {kin:'父', b:'巳'}, {kin:'官', b:'卯'} ], // 坤
-        1: [ {kin:'父', b:'子'}, {kin:'兄', b:'寅'}, {kin:'財', b:'辰'}, {kin:'孫', b:'午'}, {kin:'官', b:'申'}, {kin:'財', b:'戌'} ], // 震
-        2: [ {kin:'孫', b:'寅'}, {kin:'官', b:'辰'}, {kin:'財', b:'午'}, {kin:'父', b:'申'}, {kin:'官', b:'戌'}, {kin:'兄', b:'子'} ], // 坎
-        3: [ {kin:'官', b:'巳'}, {kin:'財', b:'卯'}, {kin:'父', b:'丑'}, {kin:'孫', b:'亥'}, {kin:'兄', b:'酉'}, {kin:'父', b:'未'} ], // 兌
-        4: [ {kin:'兄', b:'辰'}, {kin:'父', b:'午'}, {kin:'孫', b:'申'}, {kin:'兄', b:'戌'}, {kin:'財', b:'子'}, {kin:'官', b:'寅'} ], // 艮
-        5: [ {kin:'父', b:'卯'}, {kin:'孫', b:'丑'}, {kin:'官', b:'亥'}, {kin:'財', b:'酉'}, {kin:'孫', b:'未'}, {kin:'兄', b:'巳'} ], // 離
-        6: [ {kin:'財', b:'丑'}, {kin:'父', b:'亥'}, {kin:'官', b:'酉'}, {kin:'財', b:'未'}, {kin:'孫', b:'巳'}, {kin:'兄', b:'卯'} ], // 巽
-        7: [ {kin:'孫', b:'子'}, {kin:'財', b:'寅'}, {kin:'父', b:'辰'}, {kin:'官', b:'午'}, {kin:'兄', b:'申'}, {kin:'父', b:'戌'} ]  // 乾
-    };
+      // --- 八卦矩陣與屬性 ---
+      const triNames = ["坤", "震", "坎", "兌", "艮", "離", "巽", "乾"];
+      const triElements = ["土", "木", "水", "金", "土", "火", "木", "金"];
+      const guaMatrix = [
+        [
+          "坤為地",
+          "地雷復",
+          "地水師",
+          "地澤臨",
+          "地山謙",
+          "地火明夷",
+          "地風升",
+          "地天泰",
+        ],
+        [
+          "雷地豫",
+          "震為雷",
+          "雷水解",
+          "雷澤歸妹",
+          "雷山小過",
+          "雷火豐",
+          "雷風恆",
+          "雷天大壯",
+        ],
+        [
+          "水地比",
+          "水雷屯",
+          "坎為水",
+          "水澤節",
+          "水山蹇",
+          "水火既濟",
+          "水風井",
+          "水天需",
+        ],
+        [
+          "澤地萃",
+          "澤雷隨",
+          "澤水困",
+          "兌為澤",
+          "澤山咸",
+          "澤火革",
+          "澤風大過",
+          "澤天夬",
+        ],
+        [
+          "山地剝",
+          "山雷頤",
+          "山水蒙",
+          "山澤損",
+          "艮為山",
+          "山火賁",
+          "山風蠱",
+          "山天大畜",
+        ],
+        [
+          "火地晉",
+          "火雷噬嗑",
+          "火水未濟",
+          "火澤睽",
+          "火山旅",
+          "離為火",
+          "火風鼎",
+          "火天大有",
+        ],
+        [
+          "風地觀",
+          "風雷益",
+          "風水渙",
+          "風澤中孚",
+          "風山漸",
+          "風火家人",
+          "巽為風",
+          "風天小畜",
+        ],
+        [
+          "天地否",
+          "天雷無妄",
+          "天水訟",
+          "天澤履",
+          "天山遯",
+          "天火同人",
+          "天風姤",
+          "乾為天",
+        ],
+      ];
 
-    let currentBazi = {};
+      // --- 源流八純卦爻位與六親表 (用於伏神查找) ---
+      const pureHexagramLines = {
+        0: [
+          { kin: "兄", b: "丑" },
+          { kin: "財", b: "亥" },
+          { kin: "孫", b: "酉" },
+          { kin: "兄", b: "未" },
+          { kin: "父", b: "巳" },
+          { kin: "官", b: "卯" },
+        ], // 坤
+        1: [
+          { kin: "父", b: "子" },
+          { kin: "兄", b: "寅" },
+          { kin: "財", b: "辰" },
+          { kin: "孫", b: "午" },
+          { kin: "官", b: "申" },
+          { kin: "財", b: "戌" },
+        ], // 震
+        2: [
+          { kin: "孫", b: "寅" },
+          { kin: "官", b: "辰" },
+          { kin: "財", b: "午" },
+          { kin: "父", b: "申" },
+          { kin: "官", b: "戌" },
+          { kin: "兄", b: "子" },
+        ], // 坎
+        3: [
+          { kin: "官", b: "巳" },
+          { kin: "財", b: "卯" },
+          { kin: "父", b: "丑" },
+          { kin: "孫", b: "亥" },
+          { kin: "兄", b: "酉" },
+          { kin: "父", b: "未" },
+        ], // 兌
+        4: [
+          { kin: "兄", b: "辰" },
+          { kin: "父", b: "午" },
+          { kin: "孫", b: "申" },
+          { kin: "兄", b: "戌" },
+          { kin: "財", b: "子" },
+          { kin: "官", b: "寅" },
+        ], // 艮
+        5: [
+          { kin: "父", b: "卯" },
+          { kin: "孫", b: "丑" },
+          { kin: "官", b: "亥" },
+          { kin: "財", b: "酉" },
+          { kin: "孫", b: "未" },
+          { kin: "兄", b: "巳" },
+        ], // 離
+        6: [
+          { kin: "財", b: "丑" },
+          { kin: "父", b: "亥" },
+          { kin: "官", b: "酉" },
+          { kin: "財", b: "未" },
+          { kin: "孫", b: "巳" },
+          { kin: "兄", b: "卯" },
+        ], // 巽
+        7: [
+          { kin: "孫", b: "子" },
+          { kin: "財", b: "寅" },
+          { kin: "父", b: "辰" },
+          { kin: "官", b: "午" },
+          { kin: "兄", b: "申" },
+          { kin: "父", b: "戌" },
+        ], // 乾
+      };
 
-    window.onload = () => {
+      let currentBazi = {};
+
+      window.onload = () => {
         let now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        document.getElementById('dt-input').value = now.toISOString().slice(0,16);
-        setMode('threenum'); // 預設點擊狀態
+        document.getElementById("dt-input").value = now
+          .toISOString()
+          .slice(0, 16);
+        setMode("threenum"); // 預設點擊狀態
         renderTaijiButtons();
         calculateAll();
-    };
+      };
 
-    // --- 字典定義先拉上來，讓系統能優先讀到 ---
-    const clashMap = {'子':'午','丑':'未','寅':'申','卯':'酉','辰':'戌','巳':'亥','午':'子','未':'丑','申':'寅','酉':'卯','戌':'辰','亥':'巳'};
-    const combineMap = {'子':'丑','丑':'子','寅':'亥','亥':'寅','卯':'戌','戌':'卯','辰':'酉','酉':'辰','巳':'申','申':'巳','午':'未','未':'午'};
+      // --- 字典定義先拉上來，讓系統能優先讀到 ---
+      const clashMap = {
+        子: "午",
+        丑: "未",
+        寅: "申",
+        卯: "酉",
+        辰: "戌",
+        巳: "亥",
+        午: "子",
+        未: "丑",
+        申: "寅",
+        酉: "卯",
+        戌: "辰",
+        亥: "巳",
+      };
+      const combineMap = {
+        子: "丑",
+        丑: "子",
+        寅: "亥",
+        亥: "寅",
+        卯: "戌",
+        戌: "卯",
+        辰: "酉",
+        酉: "辰",
+        巳: "申",
+        申: "巳",
+        午: "未",
+        未: "午",
+      };
 
-    // --- 升級版：分數計算邏輯 ---
-    function getRelationScore(baseBranch, targetBranch) {
+      // --- 升級版：分數計算邏輯 ---
+      function getRelationScore(baseBranch, targetBranch) {
         // 【關鍵修改】：沖的邏輯最優先！如果相沖，直接給予相沖扣分，並終止後續五行判斷
         if (targetBranch === clashMap[baseBranch]) {
-            return -4; // 相沖固定扣 4 分
+          return -4; // 相沖固定扣 4 分
         }
 
         let baseEl = elements[baseBranch];
@@ -775,37 +1177,49 @@
         if (baseEl === targetEl) return 4;
 
         // 2. 相 (月/日 生 爻)：生我 (+2)
-        if ((baseEl === '木' && targetEl === '火') ||
-            (baseEl === '火' && targetEl === '土') ||
-            (baseEl === '土' && targetEl === '金') ||
-            (baseEl === '金' && targetEl === '水') ||
-            (baseEl === '水' && targetEl === '木')) return 2;
+        if (
+          (baseEl === "木" && targetEl === "火") ||
+          (baseEl === "火" && targetEl === "土") ||
+          (baseEl === "土" && targetEl === "金") ||
+          (baseEl === "金" && targetEl === "水") ||
+          (baseEl === "水" && targetEl === "木")
+        )
+          return 2;
 
         // 3. 休 (爻 生 月/日)：我生 (-0.5)
-        if ((targetEl === '木' && baseEl === '火') ||
-            (targetEl === '火' && baseEl === '土') ||
-            (targetEl === '土' && baseEl === '金') ||
-            (targetEl === '金' && baseEl === '水') ||
-            (targetEl === '水' && baseEl === '木')) return -0.5;
+        if (
+          (targetEl === "木" && baseEl === "火") ||
+          (targetEl === "火" && baseEl === "土") ||
+          (targetEl === "土" && baseEl === "金") ||
+          (targetEl === "金" && baseEl === "水") ||
+          (targetEl === "水" && baseEl === "木")
+        )
+          return -0.5;
 
         // 4. 囚 (爻 剋 月/日)：我剋 (-2)
-        if ((targetEl === '木' && baseEl === '土') ||
-            (targetEl === '土' && baseEl === '水') ||
-            (targetEl === '水' && baseEl === '火') ||
-            (targetEl === '火' && baseEl === '金') ||
-            (targetEl === '金' && baseEl === '木')) return -2;
+        if (
+          (targetEl === "木" && baseEl === "土") ||
+          (targetEl === "土" && baseEl === "水") ||
+          (targetEl === "水" && baseEl === "火") ||
+          (targetEl === "火" && baseEl === "金") ||
+          (targetEl === "金" && baseEl === "木")
+        )
+          return -2;
 
         // 5. 死 (月/日 剋 爻)：剋我 (-4)
-        if ((baseEl === '木' && targetEl === '土') ||
-            (baseEl === '土' && targetEl === '水') ||
-            (baseEl === '水' && targetEl === '火') ||
-            (baseEl === '火' && targetEl === '金') ||
-            (baseEl === '金' && targetEl === '木')) return -4;
+        if (
+          (baseEl === "木" && targetEl === "土") ||
+          (baseEl === "土" && targetEl === "水") ||
+          (baseEl === "水" && targetEl === "火") ||
+          (baseEl === "火" && targetEl === "金") ||
+          (baseEl === "金" && targetEl === "木")
+        )
+          return -4;
 
         return 0;
-    }
+      }
 
-    function calcScore(targetBranch) {
+      function calcScore(targetBranch) {
         let score = 0;
         let mBranch = currentBazi.mBranch;
         let dBranch = currentBazi.dBranch;
@@ -816,93 +1230,163 @@
 
         // 使用 Math.ceil() 進行無條件進位： 3.5 -> 4, -2.5 -> -2
         return Math.ceil(score);
-    }
+      }
 
-    function getPalaceInfo(b, t) {
-        let d0 = b[0]!=t[0], d1 = b[1]!=t[1], d2 = b[2]!=t[2];
+      function getPalaceInfo(b, t) {
+        let d0 = b[0] != t[0],
+          d1 = b[1] != t[1],
+          d2 = b[2] != t[2];
         let shi, type, palaceBits;
-        if (!d0 && !d1 && !d2) { shi = 6; type = "本宮卦"; palaceBits = t; }
-        else if ( d0 && !d1 && !d2) { shi = 1; type = "一世卦"; palaceBits = t; }
-        else if ( d0 &&  d1 && !d2) { shi = 2; type = "二世卦"; palaceBits = t; }
-        else if ( d0 &&  d1 &&  d2) { shi = 3; type = "三世卦"; palaceBits = t; }
-        else if (!d0 &&  d1 &&  d2) { shi = 4; type = "四世卦"; palaceBits = [1-b[0], 1-b[1], 1-b[2]]; }
-        else if (!d0 && !d1 &&  d2) { shi = 5; type = "五世卦"; palaceBits = [1-b[0], 1-b[1], 1-b[2]]; }
-        else if ( d0 && !d1 &&  d2) { shi = 4; type = "遊魂卦"; palaceBits = [1-b[0], 1-b[1], 1-b[2]]; }
-        else if (!d0 &&  d1 && !d2) { shi = 3; type = "歸魂卦"; palaceBits = b; }
-        
-        let ying = shi <= 3 ? shi + 3 : shi - 3;
-        let pIdx = palaceBits[0] + (palaceBits[1]<<1) + (palaceBits[2]<<2);
-        return { shi, ying, type, pIdx, pName: triNames[pIdx], pElement: triElements[pIdx] };
-    }
+        if (!d0 && !d1 && !d2) {
+          shi = 6;
+          type = "本宮卦";
+          palaceBits = t;
+        } else if (d0 && !d1 && !d2) {
+          shi = 1;
+          type = "一世卦";
+          palaceBits = t;
+        } else if (d0 && d1 && !d2) {
+          shi = 2;
+          type = "二世卦";
+          palaceBits = t;
+        } else if (d0 && d1 && d2) {
+          shi = 3;
+          type = "三世卦";
+          palaceBits = t;
+        } else if (!d0 && d1 && d2) {
+          shi = 4;
+          type = "四世卦";
+          palaceBits = [1 - b[0], 1 - b[1], 1 - b[2]];
+        } else if (!d0 && !d1 && d2) {
+          shi = 5;
+          type = "五世卦";
+          palaceBits = [1 - b[0], 1 - b[1], 1 - b[2]];
+        } else if (d0 && !d1 && d2) {
+          shi = 4;
+          type = "遊魂卦";
+          palaceBits = [1 - b[0], 1 - b[1], 1 - b[2]];
+        } else if (!d0 && d1 && !d2) {
+          shi = 3;
+          type = "歸魂卦";
+          palaceBits = b;
+        }
 
-    function getNaJia(triIdx, isUpper) {
+        let ying = shi <= 3 ? shi + 3 : shi - 3;
+        let pIdx = palaceBits[0] + (palaceBits[1] << 1) + (palaceBits[2] << 2);
+        return {
+          shi,
+          ying,
+          type,
+          pIdx,
+          pName: triNames[pIdx],
+          pElement: triElements[pIdx],
+        };
+      }
+
+      function getNaJia(triIdx, isUpper) {
         const map = {
-            7: { i: ['子','寅','辰'], o: ['午','申','戌'] },
-            0: { i: ['未','巳','卯'], o: ['丑','亥','酉'] },
-            1: { i: ['子','寅','辰'], o: ['午','申','戌'] },
-            6: { i: ['丑','亥','酉'], o: ['未','巳','卯'] },
-            2: { i: ['寅','辰','午'], o: ['申','戌','子'] },
-            5: { i: ['卯','丑','亥'], o: ['酉','未','巳'] },
-            4: { i: ['辰','午','申'], o: ['戌','子','寅'] },
-            3: { i: ['巳','卯','丑'], o: ['亥','酉','未'] }
+          7: { i: ["子", "寅", "辰"], o: ["午", "申", "戌"] },
+          0: { i: ["未", "巳", "卯"], o: ["丑", "亥", "酉"] },
+          1: { i: ["子", "寅", "辰"], o: ["午", "申", "戌"] },
+          6: { i: ["丑", "亥", "酉"], o: ["未", "巳", "卯"] },
+          2: { i: ["寅", "辰", "午"], o: ["申", "戌", "子"] },
+          5: { i: ["卯", "丑", "亥"], o: ["酉", "未", "巳"] },
+          4: { i: ["辰", "午", "申"], o: ["戌", "子", "寅"] },
+          3: { i: ["巳", "卯", "丑"], o: ["亥", "酉", "未"] },
         };
         return isUpper ? map[triIdx].o : map[triIdx].i;
-    }
+      }
 
-    function getKinship(palaceEl, lineEl) {
-        if (palaceEl === lineEl) return '兄';
-        if ((palaceEl==='木'&&lineEl==='火') || (palaceEl==='火'&&lineEl==='土') || (palaceEl==='土'&&lineEl==='金') || (palaceEl==='金'&&lineEl==='水') || (palaceEl==='水'&&lineEl==='木')) return '孫';
-        if ((lineEl==='木'&&palaceEl==='火') || (lineEl==='火'&&palaceEl==='土') || (lineEl==='土'&&palaceEl==='金') || (lineEl==='金'&&palaceEl==='水') || (lineEl==='水'&&palaceEl==='木')) return '父';
-        if ((palaceEl==='木'&&lineEl==='土') || (palaceEl==='土'&&lineEl==='水') || (palaceEl==='水'&&lineEl==='火') || (palaceEl==='火'&&lineEl==='金') || (palaceEl==='金'&&lineEl==='木')) return '財';
-        return '官';
-    }
+      function getKinship(palaceEl, lineEl) {
+        if (palaceEl === lineEl) return "兄";
+        if (
+          (palaceEl === "木" && lineEl === "火") ||
+          (palaceEl === "火" && lineEl === "土") ||
+          (palaceEl === "土" && lineEl === "金") ||
+          (palaceEl === "金" && lineEl === "水") ||
+          (palaceEl === "水" && lineEl === "木")
+        )
+          return "孫";
+        if (
+          (lineEl === "木" && palaceEl === "火") ||
+          (lineEl === "火" && palaceEl === "土") ||
+          (lineEl === "土" && palaceEl === "金") ||
+          (lineEl === "金" && palaceEl === "水") ||
+          (lineEl === "水" && palaceEl === "木")
+        )
+          return "父";
+        if (
+          (palaceEl === "木" && lineEl === "土") ||
+          (palaceEl === "土" && lineEl === "水") ||
+          (palaceEl === "水" && lineEl === "火") ||
+          (palaceEl === "火" && lineEl === "金") ||
+          (palaceEl === "金" && lineEl === "木")
+        )
+          return "財";
+        return "官";
+      }
 
-    function getBeasts(dayStem) {
-        const map = { '甲':0, '乙':0, '丙':1, '丁':1, '戊':2, '己':3, '庚':4, '辛':4, '壬':5, '癸':5 };
-        const beasts = ['青龍','朱雀','勾陳','螣蛇','白虎','玄武'];
+      function getBeasts(dayStem) {
+        const map = {
+          甲: 0,
+          乙: 0,
+          丙: 1,
+          丁: 1,
+          戊: 2,
+          己: 3,
+          庚: 4,
+          辛: 4,
+          壬: 5,
+          癸: 5,
+        };
+        const beasts = ["青龍", "朱雀", "勾陳", "螣蛇", "白虎", "玄武"];
         let start = map[dayStem];
         let res = [];
-        for(let i=0; i<6; i++) res.push(beasts[(start+i)%6]);
+        for (let i = 0; i < 6; i++) res.push(beasts[(start + i) % 6]);
         return res;
-    }
+      }
 
-    // --- 新增：計算出空/填實天數 ---
-    function getDaysUntilExitVoid(targetBranch, baseDateStr) {
+      // --- 新增：計算出空/填實天數 ---
+      function getDaysUntilExitVoid(targetBranch, baseDateStr) {
         let now = new Date(baseDateStr);
         for (let i = 1; i <= 12; i++) {
-            let futureDate = new Date(now.getTime() + i * 24 * 60 * 60 * 1000);
-            let futureLunar = Solar.fromDate(futureDate).getLunar();
-            let futureBranch = futureLunar.getDayZhi();
-            let futureXunKong = futureLunar.getDayXunKong();
+          let futureDate = new Date(now.getTime() + i * 24 * 60 * 60 * 1000);
+          let futureLunar = Solar.fromDate(futureDate).getLunar();
+          let futureBranch = futureLunar.getDayZhi();
+          let futureXunKong = futureLunar.getDayXunKong();
 
-            // 1. 判斷填實：未來日子地支 = 該爻地支
-            if (futureBranch === targetBranch) return `(${i}填)`;
+          // 1. 判斷填實：未來日子地支 = 該爻地支
+          if (futureBranch === targetBranch) return `(${i}填)`;
 
-            // 2. 判斷出旬：該爻地支不再是該旬的空亡
-            if (!futureXunKong.includes(targetBranch)) return `(${i}出)`;
+          // 2. 判斷出旬：該爻地支不再是該旬的空亡
+          if (!futureXunKong.includes(targetBranch)) return `(${i}出)`;
         }
         return "";
-    }
+      }
 
-    function calculateAll() {
+      function calculateAll() {
         // 1. 八字運算與顯示
-        const dtStr = document.getElementById('dt-input').value;
+        const dtStr = document.getElementById("dt-input").value;
         const dt = new Date(dtStr);
         const solar = Solar.fromDate(dt);
         const lunar = solar.getLunar();
         const bazi = lunar.getEightChar();
-        
+
         currentBazi = {
-            yStem: bazi.getYearGan(), yBranch: bazi.getYearZhi(),
-            mStem: bazi.getMonthGan(), mBranch: bazi.getMonthZhi(),
-            dStem: bazi.getDayGan(), dBranch: bazi.getDayZhi(),
-            tStem: bazi.getTimeGan(), tBranch: bazi.getTimeZhi()
+          yStem: bazi.getYearGan(),
+          yBranch: bazi.getYearZhi(),
+          mStem: bazi.getMonthGan(),
+          mBranch: bazi.getMonthZhi(),
+          dStem: bazi.getDayGan(),
+          dBranch: bazi.getDayZhi(),
+          tStem: bazi.getTimeGan(),
+          tBranch: bazi.getTimeZhi(),
         };
 
         let lunarStr = `【 陰曆：${lunar.getYearInGanZhi()}年 ${lunar.getMonthInChinese()}月 ${lunar.getDayInChinese()}日 ${lunar.getTimeZhi()}時 】`;
-        document.getElementById('lunar-date-display').innerText = lunarStr;
+        document.getElementById("lunar-date-display").innerText = lunarStr;
 
-        document.getElementById('bazi-grid').innerHTML = `
+        document.getElementById("bazi-grid").innerHTML = `
             <div class="pillar"><div class="pillar-title">年柱</div><div class="stem">${currentBazi.yStem}</div><div class="branch">${currentBazi.yBranch}</div></div>
             <div class="pillar"><div class="pillar-title">月柱</div><div class="stem">${currentBazi.mStem}</div><div class="branch">${currentBazi.mBranch}</div></div>
             <div class="pillar"><div class="pillar-title">日柱</div><div class="stem">${currentBazi.dStem}</div><div class="branch">${currentBazi.dBranch}</div></div>
@@ -910,34 +1394,60 @@
         `;
 
         // 渲染神煞
-        let noble = '', peach = '', horse = '', blade = '', empty = '', tomb = '';
-        const dS = currentBazi.dStem, dB = currentBazi.dBranch;
-        
-        if (['甲','戊','庚'].includes(dS)) noble = '丑 未';
-        else if (['乙','己'].includes(dS)) noble = '子 申';
-        else if (['丙','丁'].includes(dS)) noble = '亥 酉';
-        else if (dS === '辛') noble = '寅 午';
-        else noble = '卯 巳';
+        let noble = "",
+          peach = "",
+          horse = "",
+          blade = "",
+          empty = "",
+          tomb = "";
+        const dS = currentBazi.dStem,
+          dB = currentBazi.dBranch;
 
-        if (['申','子','辰'].includes(dB)) { peach = '酉'; horse = '寅'; }
-        else if (['寅','午','戌'].includes(dB)) { peach = '卯'; horse = '申'; }
-        else if (['亥','卯','未'].includes(dB)) { peach = '子'; horse = '巳'; }
-        else { peach = '午'; horse = '亥'; }
+        if (["甲", "戊", "庚"].includes(dS)) noble = "丑 未";
+        else if (["乙", "己"].includes(dS)) noble = "子 申";
+        else if (["丙", "丁"].includes(dS)) noble = "亥 酉";
+        else if (dS === "辛") noble = "寅 午";
+        else noble = "卯 巳";
 
-        const bladeMap = {'甲':'卯','乙':'辰','丙':'午','戊':'午','丁':'未','己':'未','庚':'酉','辛':'戌','壬':'子','癸':'丑'};
+        if (["申", "子", "辰"].includes(dB)) {
+          peach = "酉";
+          horse = "寅";
+        } else if (["寅", "午", "戌"].includes(dB)) {
+          peach = "卯";
+          horse = "申";
+        } else if (["亥", "卯", "未"].includes(dB)) {
+          peach = "子";
+          horse = "巳";
+        } else {
+          peach = "午";
+          horse = "亥";
+        }
+
+        const bladeMap = {
+          甲: "卯",
+          乙: "辰",
+          丙: "午",
+          戊: "午",
+          丁: "未",
+          己: "未",
+          庚: "酉",
+          辛: "戌",
+          壬: "子",
+          癸: "丑",
+        };
         blade = bladeMap[dS];
 
         empty = lunar.getDayXunKong();
 
-        const tombMap = {'木':'未', '火':'戌', '土':'戌', '金':'丑', '水':'辰'};
-        tomb = tombMap[elements[dB]] || '';
+        const tombMap = { 木: "未", 火: "戌", 土: "戌", 金: "丑", 水: "辰" };
+        tomb = tombMap[elements[dB]] || "";
 
         // 新增：依據日支五行計算「日絕」
-        const jueDiMap = { '金':'寅', '水':'巳', '木':'申', '火':'亥', '土':'亥' };
-        let dayJue = jueDiMap[elements[dB]] || '';
+        const jueDiMap = { 金: "寅", 水: "巳", 木: "申", 火: "亥", 土: "亥" };
+        let dayJue = jueDiMap[elements[dB]] || "";
 
         // 重置並初始化神煞格
-        let shenshaGrid = document.getElementById('shensha-grid');
+        let shenshaGrid = document.getElementById("shensha-grid");
         shenshaGrid.innerHTML = `
             <div class="shensha-item"><span class="shensha-label">貴人</span>${noble}</div>
             <div class="shensha-item"><span class="shensha-label">桃花</span>${peach}</div>
@@ -953,288 +1463,415 @@
         // 2. 取出輸入的爻數
         const mode = currentMode;
         let inputs = [];
-        let origBits = [], chgBits = [];
+        let origBits = [],
+          chgBits = [];
 
-        if (mode === 'taiji') {
-            inputs = [...taijiValues];
-            if (inputs.includes(null) || inputs.includes(undefined)) {
-                document.getElementById('gua-original').innerHTML = '';
-                document.getElementById('gua-changed').innerHTML = '';
-                return;
+        if (mode === "taiji") {
+          inputs = [...taijiValues];
+          if (inputs.includes(null) || inputs.includes(undefined)) {
+            document.getElementById("gua-original").innerHTML = "";
+            document.getElementById("gua-changed").innerHTML = "";
+            return;
+          }
+          inputs.forEach((v) => {
+            if (v === 6) {
+              origBits.push(0);
+              chgBits.push(1);
+            } else if (v === 7) {
+              origBits.push(1);
+              chgBits.push(1);
+            } else if (v === 8) {
+              origBits.push(0);
+              chgBits.push(0);
+            } else if (v === 9) {
+              origBits.push(1);
+              chgBits.push(0);
             }
-            inputs.forEach(v => {
-                if (v === 6) { origBits.push(0); chgBits.push(1); }
-                else if (v === 7) { origBits.push(1); chgBits.push(1); }
-                else if (v === 8) { origBits.push(0); chgBits.push(0); }
-                else if (v === 9) { origBits.push(1); chgBits.push(0); }
-            });
+          });
         } else {
-            let s1 = document.getElementById('num-1').value;
-            let s2 = document.getElementById('num-2').value;
-            let s3 = document.getElementById('num-3').value;
+          let s1 = document.getElementById("num-1").value;
+          let s2 = document.getElementById("num-2").value;
+          let s3 = document.getElementById("num-3").value;
 
-            if (!s1 || !s2 || !s3) {
-                document.getElementById('gua-original').innerHTML = '';
-                document.getElementById('gua-changed').innerHTML = '';
-                return;
+          if (!s1 || !s2 || !s3) {
+            document.getElementById("gua-original").innerHTML = "";
+            document.getElementById("gua-changed").innerHTML = "";
+            return;
+          }
+
+          let n1 = parseInt(s1) || 0;
+          let n2 = parseInt(s2) || 0;
+          let n3 = parseInt(s3) || 0;
+
+          let lowerNum = n1 % 8 || 8;
+          let upperNum = n2 % 8 || 8;
+          let moveNum = n3 % 6 || 6;
+
+          const numToTri = { 1: 7, 2: 3, 3: 5, 4: 1, 5: 6, 6: 2, 7: 4, 8: 0 };
+          let lowerTri = numToTri[lowerNum];
+          let upperTri = numToTri[upperNum];
+
+          origBits = [
+            lowerTri & 1,
+            (lowerTri >> 1) & 1,
+            (lowerTri >> 2) & 1,
+            upperTri & 1,
+            (upperTri >> 1) & 1,
+            (upperTri >> 2) & 1,
+          ];
+
+          chgBits = [...origBits];
+          chgBits[moveNum - 1] = 1 - chgBits[moveNum - 1];
+
+          for (let i = 0; i < 6; i++) {
+            if (i === moveNum - 1) {
+              inputs.push(origBits[i] === 0 ? 6 : 9);
+            } else {
+              inputs.push(origBits[i] === 0 ? 8 : 7);
             }
-
-            let n1 = parseInt(s1) || 0;
-            let n2 = parseInt(s2) || 0;
-            let n3 = parseInt(s3) || 0;
-
-            let lowerNum = n1 % 8 || 8;
-            let upperNum = n2 % 8 || 8;
-            let moveNum = n3 % 6 || 6;
-
-            const numToTri = {1:7, 2:3, 3:5, 4:1, 5:6, 6:2, 7:4, 8:0};
-            let lowerTri = numToTri[lowerNum];
-            let upperTri = numToTri[upperNum];
-
-            origBits = [
-                lowerTri & 1, (lowerTri >> 1) & 1, (lowerTri >> 2) & 1,
-                upperTri & 1, (upperTri >> 1) & 1, (upperTri >> 2) & 1
-            ];
-
-            chgBits = [...origBits];
-            chgBits[moveNum - 1] = 1 - chgBits[moveNum - 1];
-
-            for(let i=0; i<6; i++) {
-                if (i === moveNum - 1) {
-                    inputs.push(origBits[i] === 0 ? 6 : 9);
-                } else {
-                    inputs.push(origBits[i] === 0 ? 8 : 7);
-                }
-            }
+          }
         }
 
         // 4. 計算本卦與變卦
-        let origLowerIdx = origBits[0] + (origBits[1]<<1) + (origBits[2]<<2);
-        let origUpperIdx = origBits[3] + (origBits[4]<<1) + (origBits[5]<<2);
+        let origLowerIdx =
+          origBits[0] + (origBits[1] << 1) + (origBits[2] << 2);
+        let origUpperIdx =
+          origBits[3] + (origBits[4] << 1) + (origBits[5] << 2);
         let origName = guaMatrix[origUpperIdx][origLowerIdx];
-        let pInfo = getPalaceInfo(origBits.slice(0,3), origBits.slice(3,6));
+        let pInfo = getPalaceInfo(origBits.slice(0, 3), origBits.slice(3, 6));
 
-        let chgLowerIdx = chgBits[0] + (chgBits[1]<<1) + (chgBits[2]<<2);
-        let chgUpperIdx = chgBits[3] + (chgBits[4]<<1) + (chgBits[5]<<2);
+        let chgLowerIdx = chgBits[0] + (chgBits[1] << 1) + (chgBits[2] << 2);
+        let chgUpperIdx = chgBits[3] + (chgBits[4] << 1) + (chgBits[5] << 2);
         let chgName = guaMatrix[chgUpperIdx][chgLowerIdx];
 
         // 5. 生成線資料
         let beasts = getBeasts(dS);
-        let origBranches = [...getNaJia(origLowerIdx, false), ...getNaJia(origUpperIdx, true)];
-        let chgBranches = [...getNaJia(chgLowerIdx, false), ...getNaJia(chgUpperIdx, true)];
+        let origBranches = [
+          ...getNaJia(origLowerIdx, false),
+          ...getNaJia(origUpperIdx, true),
+        ];
+        let chgBranches = [
+          ...getNaJia(chgLowerIdx, false),
+          ...getNaJia(chgUpperIdx, true),
+        ];
 
         // --- 建立地支組合「局」的比對池 ---
         let globalPool = [currentBazi.mBranch, currentBazi.dBranch];
-        for(let i=0; i<6; i++) {
-            if (inputs[i] === 6 || inputs[i] === 9) { 
-                globalPool.push(origBranches[i]);
-                globalPool.push(chgBranches[i]);
-            }
-            if (i + 1 === pInfo.shi) globalPool.push(origBranches[i]); 
-            if (i + 1 === pInfo.ying) globalPool.push(origBranches[i]); 
+        for (let i = 0; i < 6; i++) {
+          if (inputs[i] === 6 || inputs[i] === 9) {
+            globalPool.push(origBranches[i]);
+            globalPool.push(chgBranches[i]);
+          }
+          if (i + 1 === pInfo.shi) globalPool.push(origBranches[i]);
+          if (i + 1 === pInfo.ying) globalPool.push(origBranches[i]);
         }
 
         // 升級：包含三合局與三會局，並確保該爻有參與才標示
         function getJuCombinations(branch) {
-            let p = new Set([...globalPool, branch]);
-            let res = [];
-            
-            // 三合局
-            if (p.has('寅') && p.has('午') && p.has('戌') && ['寅','午','戌'].includes(branch)) res.push('火局');
-            if (p.has('巳') && p.has('酉') && p.has('丑') && ['巳','酉','丑'].includes(branch)) res.push('金局');
-            if (p.has('申') && p.has('子') && p.has('辰') && ['申','子','辰'].includes(branch)) res.push('水局');
-            if (p.has('亥') && p.has('卯') && p.has('未') && ['亥','卯','未'].includes(branch)) res.push('木局');
+          let p = new Set([...globalPool, branch]);
+          let res = [];
 
-            // 三會局
-            if (p.has('寅') && p.has('卯') && p.has('辰') && ['寅','卯','辰'].includes(branch)) res.push('三會木');
-            if (p.has('巳') && p.has('午') && p.has('未') && ['巳','午','未'].includes(branch)) res.push('三會火');
-            if (p.has('申') && p.has('酉') && p.has('戌') && ['申','酉','戌'].includes(branch)) res.push('三會金');
-            if (p.has('亥') && p.has('子') && p.has('丑') && ['亥','子','丑'].includes(branch)) res.push('三會水');
+          // 三合局
+          if (
+            p.has("寅") &&
+            p.has("午") &&
+            p.has("戌") &&
+            ["寅", "午", "戌"].includes(branch)
+          )
+            res.push("火局");
+          if (
+            p.has("巳") &&
+            p.has("酉") &&
+            p.has("丑") &&
+            ["巳", "酉", "丑"].includes(branch)
+          )
+            res.push("金局");
+          if (
+            p.has("申") &&
+            p.has("子") &&
+            p.has("辰") &&
+            ["申", "子", "辰"].includes(branch)
+          )
+            res.push("水局");
+          if (
+            p.has("亥") &&
+            p.has("卯") &&
+            p.has("未") &&
+            ["亥", "卯", "未"].includes(branch)
+          )
+            res.push("木局");
 
-            return res.join(' ');
+          // 三會局
+          if (
+            p.has("寅") &&
+            p.has("卯") &&
+            p.has("辰") &&
+            ["寅", "卯", "辰"].includes(branch)
+          )
+            res.push("三會木");
+          if (
+            p.has("巳") &&
+            p.has("午") &&
+            p.has("未") &&
+            ["巳", "午", "未"].includes(branch)
+          )
+            res.push("三會火");
+          if (
+            p.has("申") &&
+            p.has("酉") &&
+            p.has("戌") &&
+            ["申", "酉", "戌"].includes(branch)
+          )
+            res.push("三會金");
+          if (
+            p.has("亥") &&
+            p.has("子") &&
+            p.has("丑") &&
+            ["亥", "子", "丑"].includes(branch)
+          )
+            res.push("三會水");
+
+          return res.join(" ");
         }
 
-        let origLines = [], chgLines = [];
+        let origLines = [],
+          chgLines = [];
         let existingKinships = new Set();
 
-        for(let i=0; i<6; i++) {
-            let el = elements[origBranches[i]];
-            let kin = getKinship(pInfo.pElement, el);
-            existingKinships.add(kin);
-            
-            let isChanged = (inputs[i]===6 || inputs[i]===9);
-            let noteArr = [];
-            if (origBranches[i] === clashMap[currentBazi.mBranch]) noteArr.push("月破");
-            if (origBranches[i] === clashMap[dB]) noteArr.push("日沖");
-            
-            // --- 加入動態出空與填實天數計算 ---
-            if (empty.includes(origBranches[i])) {
-                let exitDays = getDaysUntilExitVoid(origBranches[i], dtStr);
-                noteArr.push("日空" + exitDays);
-            } else {
-                if (origBranches[i] === combineMap[currentBazi.mBranch]) noteArr.push("月合");
-                if (origBranches[i] === combineMap[dB]) noteArr.push("日合");
-                if (origBranches[i] === horse) noteArr.push("驛馬");
-                if (origBranches[i] === tomb) noteArr.push("日墓");
-                if (origBranches[i] === dayJue) noteArr.push("日絕");
-            }
+        for (let i = 0; i < 6; i++) {
+          let el = elements[origBranches[i]];
+          let kin = getKinship(pInfo.pElement, el);
+          existingKinships.add(kin);
 
-            let oJu = getJuCombinations(origBranches[i]);
-            if (oJu) noteArr.push(oJu);
+          let isChanged = inputs[i] === 6 || inputs[i] === 9;
+          let noteArr = [];
+          if (origBranches[i] === clashMap[currentBazi.mBranch])
+            noteArr.push("月破");
+          if (origBranches[i] === clashMap[dB]) noteArr.push("日沖");
 
-            // 將 "日空" (包含天數) 獨立包裝成綠色字體，其他維持預設紅色
-            let formattedOrigNote = noteArr.map(n => n.startsWith("日空") ? `<span style="color: #16a34a;">${n}</span>` : n).join(' ');
+          // --- 加入動態出空與填實天數計算 ---
+          if (empty.includes(origBranches[i])) {
+            let exitDays = getDaysUntilExitVoid(origBranches[i], dtStr);
+            noteArr.push("日空" + exitDays);
+          } else {
+            if (origBranches[i] === combineMap[currentBazi.mBranch])
+              noteArr.push("月合");
+            if (origBranches[i] === combineMap[dB]) noteArr.push("日合");
+            if (origBranches[i] === horse) noteArr.push("驛馬");
+            if (origBranches[i] === tomb) noteArr.push("日墓");
+            if (origBranches[i] === dayJue) noteArr.push("日絕");
+          }
 
-            origLines.push({
-                isChanged: isChanged,
-                yinYang: origBits[i], kin, branch: origBranches[i], el,
-                beast: beasts[i], shiYing: (i+1===pInfo.shi) ? '世' : ((i+1===pInfo.ying) ? '應' : ''),
-                score: calcScore(origBranches[i]), note: formattedOrigNote
-            });
+          let oJu = getJuCombinations(origBranches[i]);
+          if (oJu) noteArr.push(oJu);
 
-            let cel = elements[chgBranches[i]];
-            let ckin = getKinship(pInfo.pElement, cel);
-            let cNoteArr = [];
-            
-            if (chgBranches[i] === clashMap[dB]) cNoteArr.push("日沖");
-            if (chgBranches[i] === combineMap[dB]) cNoteArr.push("日合");
-            if (chgBranches[i] === dayJue) cNoteArr.push("日絕");
-            
-            // --- 變卦同樣加入出空與填實天數計算 ---
-            if (empty.includes(chgBranches[i])) {
-                let cExitDays = getDaysUntilExitVoid(chgBranches[i], dtStr);
-                cNoteArr.push("日空" + cExitDays);
-            }
-            
-            let cJu = getJuCombinations(chgBranches[i]);
-            if (cJu) cNoteArr.push(cJu);
+          // 將 "日空" (包含天數) 獨立包裝成綠色字體，其他維持預設紅色
+          let formattedOrigNote = noteArr
+            .map((n) =>
+              n.startsWith("日空")
+                ? `<span style="color: #16a34a;">${n}</span>`
+                : n,
+            )
+            .join(" ");
 
-            // 化進/退、長生、絕、墓庫判斷
-            if (isChanged) {
-                let oldBranch = origBranches[i];
-                let newBranch = chgBranches[i];
-                let oldEl = elements[oldBranch];
-                
-                const eSeq = ['丑', '辰', '未', '戌'];
-                if (eSeq.includes(oldBranch) && eSeq.includes(newBranch)) {
-                    let oldIdx = eSeq.indexOf(oldBranch);
-                    let newIdx = eSeq.indexOf(newBranch);
-                    if (newIdx > oldIdx) cNoteArr.push('化進');
-                    if (newIdx < oldIdx) cNoteArr.push('化退');
-                } 
-                else if (oldBranch === '子' && newBranch === '亥') cNoteArr.push('化進');
-                else if (oldBranch === '亥' && newBranch === '子') cNoteArr.push('化退');
-                else if (oldBranch === '寅' && newBranch === '卯') cNoteArr.push('化進');
-                else if (oldBranch === '卯' && newBranch === '寅') cNoteArr.push('化退');
-                else if (oldBranch === '巳' && newBranch === '午') cNoteArr.push('化進');
-                else if (oldBranch === '午' && newBranch === '巳') cNoteArr.push('化退');
-                else if (oldBranch === '申' && newBranch === '酉') cNoteArr.push('化進');
-                else if (oldBranch === '酉' && newBranch === '申') cNoteArr.push('化退');
+          origLines.push({
+            isChanged: isChanged,
+            yinYang: origBits[i],
+            kin,
+            branch: origBranches[i],
+            el,
+            beast: beasts[i],
+            shiYing:
+              i + 1 === pInfo.shi ? "世" : i + 1 === pInfo.ying ? "應" : "",
+            score: calcScore(origBranches[i]),
+            note: formattedOrigNote,
+          });
 
-                const changSheng = { '金':'巳', '水':'申', '木':'亥', '火':'寅', '土':'寅' };
-                const jueDi    = { '金':'寅', '水':'巳', '木':'申', '火':'亥', '土':'亥' };
-                const muKu     = { '金':'丑', '水':'辰', '木':'未', '火':'戌', '土':'戌' };
-                
-                if (changSheng[oldEl] === newBranch) cNoteArr.push(`${oldEl}之長生`);
-                if (jueDi[oldEl] === newBranch) cNoteArr.push(`${oldEl}之絕地`);
-                if (muKu[oldEl] === newBranch) cNoteArr.push(`${oldEl}之墓庫`);
-            }
+          let cel = elements[chgBranches[i]];
+          let ckin = getKinship(pInfo.pElement, cel);
+          let cNoteArr = [];
 
-            // 將 "日空" (包含天數) 獨立包裝成綠色字體，其他維持預設紅色
-            let formattedChgNote = cNoteArr.map(n => n.startsWith("日空") ? `<span style="color: #16a34a;">${n}</span>` : n).join(' ');
+          if (chgBranches[i] === clashMap[dB]) cNoteArr.push("日沖");
+          if (chgBranches[i] === combineMap[dB]) cNoteArr.push("日合");
+          if (chgBranches[i] === dayJue) cNoteArr.push("日絕");
 
-            chgLines.push({
-                isChanged: isChanged,
-                yinYang: chgBits[i], kin: ckin, branch: chgBranches[i], el: cel, note: formattedChgNote
-            });
+          // --- 變卦同樣加入出空與填實天數計算 ---
+          if (empty.includes(chgBranches[i])) {
+            let cExitDays = getDaysUntilExitVoid(chgBranches[i], dtStr);
+            cNoteArr.push("日空" + cExitDays);
+          }
+
+          let cJu = getJuCombinations(chgBranches[i]);
+          if (cJu) cNoteArr.push(cJu);
+
+          // 化進/退、長生、絕、墓庫判斷
+          if (isChanged) {
+            let oldBranch = origBranches[i];
+            let newBranch = chgBranches[i];
+            let oldEl = elements[oldBranch];
+
+            const eSeq = ["丑", "辰", "未", "戌"];
+            if (eSeq.includes(oldBranch) && eSeq.includes(newBranch)) {
+              let oldIdx = eSeq.indexOf(oldBranch);
+              let newIdx = eSeq.indexOf(newBranch);
+              if (newIdx > oldIdx) cNoteArr.push("化進");
+              if (newIdx < oldIdx) cNoteArr.push("化退");
+            } else if (oldBranch === "子" && newBranch === "亥")
+              cNoteArr.push("化進");
+            else if (oldBranch === "亥" && newBranch === "子")
+              cNoteArr.push("化退");
+            else if (oldBranch === "寅" && newBranch === "卯")
+              cNoteArr.push("化進");
+            else if (oldBranch === "卯" && newBranch === "寅")
+              cNoteArr.push("化退");
+            else if (oldBranch === "巳" && newBranch === "午")
+              cNoteArr.push("化進");
+            else if (oldBranch === "午" && newBranch === "巳")
+              cNoteArr.push("化退");
+            else if (oldBranch === "申" && newBranch === "酉")
+              cNoteArr.push("化進");
+            else if (oldBranch === "酉" && newBranch === "申")
+              cNoteArr.push("化退");
+
+            const changSheng = {
+              金: "巳",
+              水: "申",
+              木: "亥",
+              火: "寅",
+              土: "寅",
+            };
+            const jueDi = { 金: "寅", 水: "巳", 木: "申", 火: "亥", 土: "亥" };
+            const muKu = { 金: "丑", 水: "辰", 木: "未", 火: "戌", 土: "戌" };
+
+            if (changSheng[oldEl] === newBranch)
+              cNoteArr.push(`${oldEl}之長生`);
+            if (jueDi[oldEl] === newBranch) cNoteArr.push(`${oldEl}之絕地`);
+            if (muKu[oldEl] === newBranch) cNoteArr.push(`${oldEl}之墓庫`);
+          }
+
+          // 將 "日空" (包含天數) 獨立包裝成綠色字體，其他維持預設紅色
+          let formattedChgNote = cNoteArr
+            .map((n) =>
+              n.startsWith("日空")
+                ? `<span style="color: #16a34a;">${n}</span>`
+                : n,
+            )
+            .join(" ");
+
+          chgLines.push({
+            isChanged: isChanged,
+            yinYang: chgBits[i],
+            kin: ckin,
+            branch: chgBranches[i],
+            el: cel,
+            note: formattedChgNote,
+          });
         }
 
         // 6. 伏神計算
-        let fushenDisplay = Array(6).fill('');
-        const allKins = ['父','兄','孫','財','官'];
-        let missing = allKins.filter(k => !existingKinships.has(k));
-        
+        let fushenDisplay = Array(6).fill("");
+        const allKins = ["父", "兄", "孫", "財", "官"];
+        let missing = allKins.filter((k) => !existingKinships.has(k));
+
         if (missing.length > 0) {
-            let pureLines = pureHexagramLines[pInfo.pIdx];
-            missing.forEach(mKin => {
-                for(let i=0; i<6; i++) {
-                    if (pureLines[i].kin === mKin) {
-                        let fBranch = pureLines[i].b;
-                        let fEl = elements[fBranch]; // 新增：取得伏神地支對應的五行
-                        let fScore = calcScore(fBranch);
-                        let fScoreText = fScore < 0 ? `(${Math.abs(fScore)})` : fScore;
-                        let fScoreClass = fScore < 0 ? 'score-negative' : '';
-                        
-                        // 修改：在字串中把 ${fEl} 加在 ${fBranch} 後面
-                        fushenDisplay[i] = `<span style="color:var(--secondary-text);">${mKin}${fBranch}${fEl}</span> <span class="${fScoreClass}" style="font-weight:bold;">${fScoreText}</span>`;
-                        break;
-                    }
-                }
-            });
+          let pureLines = pureHexagramLines[pInfo.pIdx];
+          missing.forEach((mKin) => {
+            for (let i = 0; i < 6; i++) {
+              if (pureLines[i].kin === mKin) {
+                let fBranch = pureLines[i].b;
+                let fEl = elements[fBranch]; // 新增：取得伏神地支對應的五行
+                let fScore = calcScore(fBranch);
+                let fScoreText = fScore < 0 ? `(${Math.abs(fScore)})` : fScore;
+                let fScoreClass = fScore < 0 ? "score-negative" : "";
+
+                // 修改：在字串中把 ${fEl} 加在 ${fBranch} 後面
+                fushenDisplay[i] =
+                  `<span style="color:var(--secondary-text);">${mKin}${fBranch}${fEl}</span> <span class="${fScoreClass}" style="font-weight:bold;">${fScoreText}</span>`;
+                break;
+              }
+            }
+          });
         }
 
         // --- 6.5 升級版：計算用神與神煞特殊條件 (貪生忘剋、仇忌同動、貪合) ---
-        let yongShenSelected = document.getElementById('yongshen-select').value;
-        const cycleFull = ['父母', '兄弟', '子孫', '財妻', '官鬼'];
-        const cycleShort = ['父', '兄', '孫', '財', '官'];
-        
+        let yongShenSelected = document.getElementById("yongshen-select").value;
+        const cycleFull = ["父母", "兄弟", "子孫", "財妻", "官鬼"];
+        const cycleShort = ["父", "兄", "孫", "財", "官"];
+
         let yIdx = cycleFull.indexOf(yongShenSelected);
         let yuanKin = cycleShort[(yIdx + 4) % 5];
-        let jiKin   = cycleShort[(yIdx + 3) % 5];
+        let jiKin = cycleShort[(yIdx + 3) % 5];
         let chouKin = cycleShort[(yIdx + 2) % 5];
 
         // 建立「活躍池」：包含所有動爻與化爻
         let activeItems = [];
         for (let i = 0; i < 6; i++) {
-            if (origLines[i].isChanged) {
-                // 將動爻與其對應的化爻一起加入活躍池
-                activeItems.push({ kin: origLines[i].kin, branch: origLines[i].branch, type: 'orig', index: i });
-                activeItems.push({ kin: chgLines[i].kin, branch: chgLines[i].branch, type: 'chg', index: i });
-            }
+          if (origLines[i].isChanged) {
+            // 將動爻與其對應的化爻一起加入活躍池
+            activeItems.push({
+              kin: origLines[i].kin,
+              branch: origLines[i].branch,
+              type: "orig",
+              index: i,
+            });
+            activeItems.push({
+              kin: chgLines[i].kin,
+              branch: chgLines[i].branch,
+              type: "chg",
+              index: i,
+            });
+          }
         }
 
         // 取出活躍池中出現的所有六親
-        let activeKins = activeItems.map(item => item.kin);
+        let activeKins = activeItems.map((item) => item.kin);
         let specialConds = [];
 
         // 仇忌同動：仇神與忌神都在活躍池中 (不管是動爻還是化爻)
         if (activeKins.includes(chouKin) && activeKins.includes(jiKin)) {
-            specialConds.push("仇忌同動");
+          specialConds.push("仇忌同動");
         }
         // 貪生忘剋：忌神與元神都在活躍池中 (不管是動爻還是化爻)
         if (activeKins.includes(jiKin) && activeKins.includes(yuanKin)) {
-            specialConds.push("貪生忘剋");
+          specialConds.push("貪生忘剋");
         }
 
         // 貪合判斷邏輯：判斷某個目標六親是否在活躍池中且參與了地支相合
         function checkActiveLiuHe(targetKin) {
-            // 找出活躍池中所有屬於 targetKin 的元素
-            let targets = activeItems.filter(item => item.kin === targetKin);
-            for (let target of targets) {
-                let targetCombo = combineMap[target.branch]; // 該地支的六合對象
-                // 1. 與月建或日建相合
-                if (currentBazi.mBranch === targetCombo || currentBazi.dBranch === targetCombo) return true;
-                // 2. 與活躍池中的其他地支相合 (包含跟自己化出的爻相合)
-                for (let other of activeItems) {
-                    // 排除跟自己比對
-                    if (other.index === target.index && other.type === target.type) continue;
-                    if (other.branch === targetCombo) return true;
-                }
+          // 找出活躍池中所有屬於 targetKin 的元素
+          let targets = activeItems.filter((item) => item.kin === targetKin);
+          for (let target of targets) {
+            let targetCombo = combineMap[target.branch]; // 該地支的六合對象
+            // 1. 與月建或日建相合
+            if (
+              currentBazi.mBranch === targetCombo ||
+              currentBazi.dBranch === targetCombo
+            )
+              return true;
+            // 2. 與活躍池中的其他地支相合 (包含跟自己化出的爻相合)
+            for (let other of activeItems) {
+              // 排除跟自己比對
+              if (other.index === target.index && other.type === target.type)
+                continue;
+              if (other.branch === targetCombo) return true;
             }
-            return false;
+          }
+          return false;
         }
 
         if (checkActiveLiuHe(yuanKin)) specialConds.push("貪合忘生");
         if (checkActiveLiuHe(jiKin)) specialConds.push("貪合忘剋");
 
-        specialConds.slice(0, 4).forEach(cond => {
-            // 定義顏色判斷：如果是這兩個詞，就改用綠色系，否則維持紅色系
-            const isGreen = (cond === "貪合忘生" || cond === "仇忌同動");
-            const textColor = isGreen ? "#16a34a" : "var(--red-text)";
-            const borderColor = isGreen ? "1px solid #16a34a" : "1px solid var(--red-text)";
-            const bgColor = isGreen ? "#f0fdf4" : "#fef2f2";
+        specialConds.slice(0, 4).forEach((cond) => {
+          // 定義顏色判斷：如果是這兩個詞，就改用綠色系，否則維持紅色系
+          const isGreen = cond === "貪合忘生" || cond === "仇忌同動";
+          const textColor = isGreen ? "#16a34a" : "var(--red-text)";
+          const borderColor = isGreen
+            ? "1px solid #16a34a"
+            : "1px solid var(--red-text)";
+          const bgColor = isGreen ? "#f0fdf4" : "#fef2f2";
 
-            shenshaGrid.innerHTML += `
+          shenshaGrid.innerHTML += `
                 <div class="shensha-item">
                     <span class="shensha-label" style="color:${textColor}; font-weight:bold; border: ${borderColor}; padding: 2px 6px; border-radius: 4px; background-color: ${bgColor};">${cond}</span>
                 </div>
@@ -1244,9 +1881,9 @@
         // 7. 渲染 UI
         renderOriginalGua(origName, pInfo, origLines, fushenDisplay);
         renderChangedGua(chgName, chgLines, origLines);
-    }
+      }
 
-    function renderOriginalGua(name, pInfo, lines, fushenDisplay) {
+      function renderOriginalGua(name, pInfo, lines, fushenDisplay) {
         let html = `
             <div class="gua-title-box">
                 <div class="gua-name">【${name}】</div>
@@ -1255,14 +1892,17 @@
             <div class="lines-container">
         `;
         lines.forEach((l, i) => {
-            // 完美無間隙方塊，且加入隱藏方塊解決 Win/Mac 寬度差異
-            let symbol = l.yinYang === 1 ? '▇▇▇▇▇' : '▇▇<span style="visibility:hidden;">▇</span>▇▇';
-            let symClass = l.isChanged ? 'changed-red' : '';
-            let scText = l.score < 0 ? `(${Math.abs(l.score)})` : l.score;
-            let scClass = l.score < 0 ? 'score-negative' : '';
-            let movingClass = ''; // 已移除動爻專屬放大標籤
+          // 完美無間隙方塊，且加入隱藏方塊解決 Win/Mac 寬度差異
+          let symbol =
+            l.yinYang === 1
+              ? "▇▇▇▇▇"
+              : '▇▇<span style="visibility:hidden;">▇</span>▇▇';
+          let symClass = l.isChanged ? "changed-red" : "";
+          let scText = l.score < 0 ? `(${Math.abs(l.score)})` : l.score;
+          let scClass = l.score < 0 ? "score-negative" : "";
+          let movingClass = ""; // 已移除動爻專屬放大標籤
 
-            html += `
+          html += `
                 <div class="line-row ${movingClass}">
                     <div class="fushen-box">${fushenDisplay[i]}</div>
                     <div class="beast-box">${l.beast}</div>
@@ -1274,11 +1914,11 @@
                 </div>
             `;
         });
-        html += '</div>';
-        document.getElementById('gua-original').innerHTML = html;
-    }
+        html += "</div>";
+        document.getElementById("gua-original").innerHTML = html;
+      }
 
-    function renderChangedGua(name, lines, origLines) {
+      function renderChangedGua(name, lines, origLines) {
         let html = `
             <div class="gua-title-box">
                 <div class="gua-name">【${name}】</div>
@@ -1287,12 +1927,15 @@
             <div class="lines-container">
         `;
         lines.forEach((l, i) => {
-            let isChanged = l.isChanged;
-            let symbol = l.yinYang === 1 ? '▇▇▇▇▇' : '▇▇<span style="visibility:hidden;">▇</span>▇▇';
-            let symClass = isChanged ? 'changed-red' : '';
-            let movingClass = ''; // 已移除動爻專屬放大標籤
-            
-            html += `
+          let isChanged = l.isChanged;
+          let symbol =
+            l.yinYang === 1
+              ? "▇▇▇▇▇"
+              : '▇▇<span style="visibility:hidden;">▇</span>▇▇';
+          let symClass = isChanged ? "changed-red" : "";
+          let movingClass = ""; // 已移除動爻專屬放大標籤
+
+          html += `
                 <div class="line-row ${movingClass}">
                     <div class="combo-box">${l.kin}${l.branch}${l.el}</div>
                     <div class="symbol-box ${symClass}">${symbol}</div>
@@ -1300,25 +1943,31 @@
                 </div>
             `;
         });
-        html += '</div>';
-        document.getElementById('gua-changed').innerHTML = html;
-    }
+        html += "</div>";
+        document.getElementById("gua-changed").innerHTML = html;
+      }
 
-    // --- 一鍵截圖並複製到剪貼簿功能 (簡化畫面集中版) ---
-    function copyToClipboard() {
-        const btn = document.querySelector('.fab-copy-btn');
-        btn.innerText = '⏳'; 
-        btn.style.pointerEvents = 'none'; 
+      // --- 一鍵截圖並複製到剪貼簿功能 (簡化畫面集中版) ---
+      function copyToClipboard() {
+        // 播放相機喀嚓音效 (請確保同資料夾內有一個名為 shutter.mp3 的音檔)
+        const audio = new Audio("shutter.mp3");
+        audio
+          .play()
+          .catch((err) => console.log("音效播放失敗或檔案不存在:", err));
+
+        const btn = document.querySelector(".fab-copy-btn");
+        btn.innerText = "⏳";
+        btn.style.pointerEvents = "none";
 
         // 1. 抓取目前畫面上的資訊
-        const dtStr = document.getElementById('dt-input').value;
+        const dtStr = document.getElementById("dt-input").value;
         const dt = new Date(dtStr);
-        const formattedDate = `西元${dt.getFullYear()}年 ${dt.getMonth()+1}月${dt.getDate()}日 ${String(dt.getHours()).padStart(2, '0')}時${String(dt.getMinutes()).padStart(2, '0')}分`;
+        const formattedDate = `西元${dt.getFullYear()}年 ${dt.getMonth() + 1}月${dt.getDate()}日 ${String(dt.getHours()).padStart(2, "0")}時${String(dt.getMinutes()).padStart(2, "0")}分`;
 
-        const stems = document.querySelectorAll('.bazi-grid .stem');
-        const branches = document.querySelectorAll('.bazi-grid .branch');
+        const stems = document.querySelectorAll(".bazi-grid .stem");
+        const branches = document.querySelectorAll(".bazi-grid .branch");
         // 完美對齊的排版時日月年
-            const baziStr = `
+        const baziStr = `
                 <div style="display:flex; gap: 18px; text-align: center; margin-right: 20px; font-weight: normal;">
                     <div><div>時</div><div>${stems[3].innerText}</div><div>${branches[3].innerText}</div></div>
                     <div><div>日</div><div>${stems[2].innerText}</div><div>${branches[2].innerText}</div></div>
@@ -1326,33 +1975,46 @@
                     <div><div>年</div><div>${stems[0].innerText}</div><div>${branches[0].innerText}</div></div>
                 </div>`;
 
-            let noble = '', peach = '', empty = '', horse = '', blade = '';
-            document.querySelectorAll('.shensha-item').forEach(item => {
-                const text = item.innerText;
-                if(text.includes('貴人')) noble = text.replace('貴人', '').trim();
-                if(text.includes('桃花')) peach = text.replace('桃花', '').trim();
-                if(text.includes('日空')) empty = text.replace('日空', '').trim();
-                if(text.includes('驛馬')) horse = text.replace('驛馬', '').trim();
-                if(text.includes('羊刃')) blade = text.replace('羊刃', '').trim();
-            });
+        let noble = "",
+          peach = "",
+          empty = "",
+          horse = "",
+          blade = "";
+        document.querySelectorAll(".shensha-item").forEach((item) => {
+          const text = item.innerText;
+          if (text.includes("貴人")) noble = text.replace("貴人", "").trim();
+          if (text.includes("桃花")) peach = text.replace("桃花", "").trim();
+          if (text.includes("日空")) empty = text.replace("日空", "").trim();
+          if (text.includes("驛馬")) horse = text.replace("驛馬", "").trim();
+          if (text.includes("羊刃")) blade = text.replace("羊刃", "").trim();
+        });
 
-            const origTitle = document.querySelectorAll('.gua-title-box')[0];
-            const chgTitle = document.querySelectorAll('.gua-title-box')[1];
-            const origName = origTitle ? origTitle.querySelector('.gua-name').innerText : '';
-            const origPalace = origTitle ? origTitle.querySelector('.gua-palace').innerText : '';
-            const chgName = chgTitle ? chgTitle.querySelector('.gua-name').innerText : '';
+        const origTitle = document.querySelectorAll(".gua-title-box")[0];
+        const chgTitle = document.querySelectorAll(".gua-title-box")[1];
+        const origName = origTitle
+          ? origTitle.querySelector(".gua-name").innerText
+          : "";
+        const origPalace = origTitle
+          ? origTitle.querySelector(".gua-palace").innerText
+          : "";
+        const chgName = chgTitle
+          ? chgTitle.querySelector(".gua-name").innerText
+          : "";
 
-            const origLinesDOM = document.querySelectorAll('#gua-original .line-row');
-            const chgLinesDOM = document.querySelectorAll('#gua-changed .line-row');
-            
-            // 抓取用神
-            const yongShenValue = document.getElementById('yongshen-select').value;
+        const origLinesDOM = document.querySelectorAll(
+          "#gua-original .line-row",
+        );
+        const chgLinesDOM = document.querySelectorAll("#gua-changed .line-row");
 
-            // 2. 建立隱藏的截圖專用版面 (模仿附圖格式)
-            const captureZone = document.createElement('div');
-            captureZone.style.cssText = 'position:fixed; top:-9999px; left:0; width:750px; background-color:#ffffff; padding:40px; font-family:"Microsoft JhengHei",sans-serif; color:#000000; z-index:-1000; box-sizing: border-box;';
-            
-            let html = `
+        // 抓取用神
+        const yongShenValue = document.getElementById("yongshen-select").value;
+
+        // 2. 建立隱藏的截圖專用版面 (模仿附圖格式)
+        const captureZone = document.createElement("div");
+        captureZone.style.cssText =
+          'position:fixed; top:-9999px; left:0; width:750px; background-color:#ffffff; padding:40px; font-family:"Microsoft JhengHei",sans-serif; color:#000000; z-index:-1000; box-sizing: border-box;';
+
+        let html = `
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;">
                     <div>
                         <div style="font-size: 18px; margin-bottom: 10px; color: #1e40af; font-weight: bold;">${formattedDate}</div>
@@ -1376,59 +2038,65 @@
                 <div style="display: flex; font-size: 18px; margin-bottom: 15px; font-weight: bold;">
                     <div style="width: 50px;">六獸</div>
                     <div style="width: 140px; text-align: center;">〔伏神〕</div>
-                    <div style="flex: 1; text-align: center;">${origPalace ? origPalace.split(' - ')[0] : ''}：${origName.replace(/【|】/g, '')}<br>〔本卦〕</div>
+                    <div style="flex: 1; text-align: center;">${origPalace ? origPalace.split(" - ")[0] : ""}：${origName.replace(/【|】/g, "")}<br>〔本卦〕</div>
                     <div style="width: 60px;"></div>
-                    <div style="flex: 1; text-align: center;">${chgName ? chgName.replace(/【|】/g, '') : ''}<br>${chgName ? '〔變卦〕' : ''}</div>
+                    <div style="flex: 1; text-align: center;">${chgName ? chgName.replace(/【|】/g, "") : ""}<br>${chgName ? "〔變卦〕" : ""}</div>
                 </div>
                 
                 <div style="display: flex; flex-direction: column-reverse; font-size: 20px; line-height: 1.8;">
             `;
 
-            // 組合每一爻的資訊
-            for(let i=0; i<6; i++) {
-                const oLine = origLinesDOM[i];
-                const cLine = chgLinesDOM[i];
-                if(!oLine) continue;
-                
-                const beast = oLine.querySelector('.beast-box').innerText;
-                const fushenHtml = oLine.querySelector('.fushen-box').innerHTML;
-                const sy = oLine.querySelector('.shi-ying-box').innerText;
-                const oSym = oLine.querySelector('.symbol-box').innerHTML;
-                const oCombo = oLine.querySelector('.combo-box').innerText;
-                const oScoreStr = oLine.querySelector('.score-box').innerText;
-                
-                // 將分數格式轉換，負分改紅色並加左右括號
-                let formattedScore = '';
-                if(oScoreStr) {
-                    if(oScoreStr.includes('(') || oScoreStr.includes('-') || oScoreStr.includes('－')) {
-                        let num = oScoreStr.replace(/\(|\)|－|-/g, ''); // 濾出純數字
-                        formattedScore = `<span style="color:#dc2626;">(－${num})</span>`;
-                    } else {
-                        formattedScore = `＋${oScoreStr}`;
-                    }
-                }
+        // 組合每一爻的資訊
+        for (let i = 0; i < 6; i++) {
+          const oLine = origLinesDOM[i];
+          const cLine = chgLinesDOM[i];
+          if (!oLine) continue;
 
-            const isChanged = oLine.querySelector('.symbol-box').classList.contains('changed-red');
-            let chgPart = '';
-            
-            if (isChanged && cLine) {
-                const cCombo = cLine.querySelector('.combo-box').innerText;
-                const cSym = cLine.querySelector('.symbol-box').innerHTML;
-                chgPart = `<span style="color:#dc2626; margin: 0 10px;">==》</span><span style="color:#dc2626; width:75px; display:inline-block; text-align:center;">${cCombo}</span> <span style="color:#dc2626;">${cSym}</span>`;
-            } else if (cLine && chgName) {
-                // 靜爻的對應顯示 (隱藏箭頭以保持對齊)
-                const cCombo = cLine.querySelector('.combo-box').innerText;
-                const cSym = cLine.querySelector('.symbol-box').innerHTML;
-                chgPart = `<span style="margin: 0 10px; visibility:hidden;">==》</span><span style="width:75px; display:inline-block; text-align:center;">${cCombo}</span> <span>${cSym}</span>`;
+          const beast = oLine.querySelector(".beast-box").innerText;
+          const fushenHtml = oLine.querySelector(".fushen-box").innerHTML;
+          const sy = oLine.querySelector(".shi-ying-box").innerText;
+          const oSym = oLine.querySelector(".symbol-box").innerHTML;
+          const oCombo = oLine.querySelector(".combo-box").innerText;
+          const oScoreStr = oLine.querySelector(".score-box").innerText;
+
+          // 將分數格式轉換，負分改紅色並加左右括號
+          let formattedScore = "";
+          if (oScoreStr) {
+            if (
+              oScoreStr.includes("(") ||
+              oScoreStr.includes("-") ||
+              oScoreStr.includes("－")
+            ) {
+              let num = oScoreStr.replace(/\(|\)|－|-/g, ""); // 濾出純數字
+              formattedScore = `<span style="color:#dc2626;">(－${num})</span>`;
+            } else {
+              formattedScore = `＋${oScoreStr}`;
             }
+          }
 
-            html += `
+          const isChanged = oLine
+            .querySelector(".symbol-box")
+            .classList.contains("changed-red");
+          let chgPart = "";
+
+          if (isChanged && cLine) {
+            const cCombo = cLine.querySelector(".combo-box").innerText;
+            const cSym = cLine.querySelector(".symbol-box").innerHTML;
+            chgPart = `<span style="color:#dc2626; margin: 0 10px;">==》</span><span style="color:#dc2626; width:75px; display:inline-block; text-align:center;">${cCombo}</span> <span style="color:#dc2626;">${cSym}</span>`;
+          } else if (cLine && chgName) {
+            // 靜爻的對應顯示 (隱藏箭頭以保持對齊)
+            const cCombo = cLine.querySelector(".combo-box").innerText;
+            const cSym = cLine.querySelector(".symbol-box").innerHTML;
+            chgPart = `<span style="margin: 0 10px; visibility:hidden;">==》</span><span style="width:75px; display:inline-block; text-align:center;">${cCombo}</span> <span>${cSym}</span>`;
+          }
+
+          html += `
                 <div style="display: flex; align-items: center; white-space: nowrap;">
                     <div style="width: 50px;">${beast}</div>
                     <div style="width: 140px; text-align: right; padding-right: 10px; font-size: 16px;">
                         ${fushenHtml} <span style="color:#1e40af; font-weight:bold; margin-left:5px;">${sy}</span>
                     </div>
-                    <div style="width: 100px; text-align: center; ${isChanged ? 'color:#dc2626;' : ''}">${oSym}</div>
+                    <div style="width: 100px; text-align: center; ${isChanged ? "color:#dc2626;" : ""}">${oSym}</div>
                     <div style="width: 120px; padding-left: 5px;">${oCombo} ${formattedScore}</div>
                     <div style="flex: 1; display:flex; align-items:center;">${chgPart}</div>
                 </div>
@@ -1441,87 +2109,125 @@
 
         // 3. 執行截圖 (加入防卡死機制與跨域許可)
         html2canvas(captureZone, {
-            backgroundColor: '#ffffff',
-            scale: 2,
-            useCORS: true, // 允許讀取同層圖片，解決跨域污染問題
-            logging: false
-        }).then(canvas => {
+          backgroundColor: "#ffffff",
+          scale: 2,
+          useCORS: true, // 允許讀取同層圖片，解決跨域污染問題
+          logging: false,
+        })
+          .then((canvas) => {
             document.body.removeChild(captureZone); // 拍完立刻移除隱藏版面
-            
-            canvas.toBlob(blob => {
-                if (blob) {
-                    try {
-                        const item = new ClipboardItem({ 'image/png': blob });
-                        navigator.clipboard.write([item]).then(() => {
-                            btn.innerText = '✅';
-                            setTimeout(() => { btn.innerText = '📸'; btn.style.pointerEvents = 'auto'; }, 2000);
-                        }).catch(err => {
-                            downloadCanvas(canvas, btn);
-                        });
-                    } catch(e) {
-                        downloadCanvas(canvas, btn);
-                    }
+
+            canvas.toBlob((blob) => {
+              if (blob) {
+                try {
+                  const item = new ClipboardItem({ "image/png": blob });
+                  navigator.clipboard
+                    .write([item])
+                    .then(() => {
+                      btn.innerText = "✅";
+                      setTimeout(() => {
+                        btn.innerText = "📸";
+                        btn.style.pointerEvents = "auto";
+                      }, 2000);
+                    })
+                    .catch((err) => {
+                      downloadCanvas(canvas, btn);
+                    });
+                } catch (e) {
+                  downloadCanvas(canvas, btn);
                 }
-            }, 'image/png');
-        }).catch(error => {
+              }
+            }, "image/png");
+          })
+          .catch((error) => {
             // 發生錯誤時的急救處理，避免按鈕永遠卡在沙漏
             if (document.body.contains(captureZone)) {
-                document.body.removeChild(captureZone);
+              document.body.removeChild(captureZone);
             }
-            btn.innerText = '❌';
-            setTimeout(() => { btn.innerText = '📸'; btn.style.pointerEvents = 'auto'; }, 2000);
-            alert('截圖失敗！\n1. 請確認 qrcode.png 檔案已上傳，且副檔名與大小寫完全一致。\n2. 若是本機測試，請透過 VS Code 的 Live Server (Go Live) 開啟網頁。');
-            console.error('html2canvas error:', error);
-        });
-    }
+            btn.innerText = "❌";
+            setTimeout(() => {
+              btn.innerText = "📸";
+              btn.style.pointerEvents = "auto";
+            }, 2000);
+            alert(
+              "截圖失敗！\n1. 請確認 qrcode.png 檔案已上傳，且副檔名與大小寫完全一致。\n2. 若是本機測試，請透過 VS Code 的 Live Server (Go Live) 開啟網頁。",
+            );
+            console.error("html2canvas error:", error);
+          });
+      }
 
-    function downloadCanvas(canvas, btn) {
-        const link = document.createElement('a');
-        link.download = '卦象排盤.png';
-        link.href = canvas.toDataURL('image/png');
+      function downloadCanvas(canvas, btn) {
+        const link = document.createElement("a");
+        link.download = "卦象排盤.png";
+        link.href = canvas.toDataURL("image/png");
         link.click();
-        btn.innerText = '✅';
-        setTimeout(() => { btn.innerText = '📸'; btn.style.pointerEvents = 'auto'; }, 2000);
-    }
-// ==========================================
-    // 🛡️ 網頁防護機制：防右鍵、防複製、防看原始碼
-    // ==========================================
-    
-    // 1. 禁用滑鼠右鍵選單
-    document.addEventListener('contextmenu', function(e) {
-        e.preventDefault();
-    });
+        btn.innerText = "✅";
+        setTimeout(() => {
+          btn.innerText = "📸";
+          btn.style.pointerEvents = "auto";
+        }, 2000);
+      }
+      // ==========================================
+      // 🛡️ 網頁防護機制：防右鍵、防複製、防看原始碼
+      // ==========================================
 
-    // 2. 禁用 Ctrl+C / Cmd+C 複製動作 (即使被選取也無法複製)
-    document.addEventListener('copy', function(e) {
+      // 1. 禁用滑鼠右鍵選單
+      document.addEventListener("contextmenu", function (e) {
         e.preventDefault();
-    });
+      });
 
-    // 3. 攔截常見的開發者快捷鍵 (F12, Ctrl+U, Ctrl+Shift+I 等)
-    document.addEventListener('keydown', function(e) {
+      // 2. 禁用 Ctrl+C / Cmd+C 複製動作 (即使被選取也無法複製)
+      document.addEventListener("copy", function (e) {
+        e.preventDefault();
+      });
+
+      // 3. 攔截常見的開發者快捷鍵 (F12, Ctrl+U, Ctrl+Shift+I 等)
+      document.addEventListener("keydown", function (e) {
         // 防止 F12 (開啟開發者工具)
-        if (e.key === 'F12') {
-            e.preventDefault();
+        if (e.key === "F12") {
+          e.preventDefault();
         }
         // 防止 Ctrl+Shift+I 或 Cmd+Option+I (開啟開發者工具)
-        if ((e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.shiftKey && e.key === 'i') || (e.metaKey && e.altKey && e.key === 'i')) {
-            e.preventDefault();
+        if (
+          (e.ctrlKey && e.shiftKey && e.key === "I") ||
+          (e.ctrlKey && e.shiftKey && e.key === "i") ||
+          (e.metaKey && e.altKey && e.key === "i")
+        ) {
+          e.preventDefault();
         }
         // 防止 Ctrl+Shift+J 或 Cmd+Option+J (開啟控制台)
-        if ((e.ctrlKey && e.shiftKey && e.key === 'J') || (e.ctrlKey && e.shiftKey && e.key === 'j') || (e.metaKey && e.altKey && e.key === 'j')) {
-            e.preventDefault();
+        if (
+          (e.ctrlKey && e.shiftKey && e.key === "J") ||
+          (e.ctrlKey && e.shiftKey && e.key === "j") ||
+          (e.metaKey && e.altKey && e.key === "j")
+        ) {
+          e.preventDefault();
         }
         // 防止 Ctrl+U 或 Cmd+U (檢視網頁原始碼)
-        if ((e.ctrlKey && e.key === 'U') || (e.ctrlKey && e.key === 'u') || (e.metaKey && e.key === 'u')) {
-            e.preventDefault();
+        if (
+          (e.ctrlKey && e.key === "U") ||
+          (e.ctrlKey && e.key === "u") ||
+          (e.metaKey && e.key === "u")
+        ) {
+          e.preventDefault();
         }
         // 防止 Ctrl+S 或 Cmd+S (另存網頁)
-        if ((e.ctrlKey && e.key === 'S') || (e.ctrlKey && e.key === 's') || (e.metaKey && e.key === 's')) {
-            e.preventDefault();
+        if (
+          (e.ctrlKey && e.key === "S") ||
+          (e.ctrlKey && e.key === "s") ||
+          (e.metaKey && e.key === "s")
+        ) {
+          e.preventDefault();
         }
-    });
-</script>
+      });
+    </script>
 
-<button class="fab-copy-btn" onclick="copyToClipboard()" title="一鍵複製排盤">📸</button>
-</body>
+    <button
+      class="fab-copy-btn"
+      onclick="copyToClipboard()"
+      title="一鍵複製排盤"
+    >
+      📸
+    </button>
+  </body>
 </html>

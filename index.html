@@ -232,15 +232,18 @@
         color: var(--primary-text);
         font-size: 16px;
       }
-      .yao-input-row input {
+      .yao-input-row input,
+      .yao-input-row select {
         width: 80px;
         padding: 8px;
         text-align: center;
+        text-align-last: center;
         border: 2px solid #cbd5e1;
         border-radius: 6px;
         font-size: 18px;
         font-weight: bold;
         color: var(--primary-text);
+        background-color: #ffffff;
       }
 
       /* 太極丸點擊按鈕樣式 */
@@ -629,6 +632,9 @@
             <button class="mode-btn" id="btn-taiji" onclick="setMode('taiji')">
               太極丸
             </button>
+            <button class="mode-btn" id="btn-select" onclick="setMode('select')">
+              自選卦
+            </button>
             <button
               class="mode-btn"
               id="btn-random"
@@ -717,6 +723,47 @@
               隨機丸
             </button>
           </div>
+
+          <div id="select-inputs" style="display: none; flex-direction: column; gap: 12px">
+            <div class="yao-input-row">
+              <label>上卦</label>
+              <select id="sel-upper" onchange="calculateAll()">
+                <option value="1">乾天</option>
+                <option value="2">兌澤</option>
+                <option value="3">離火</option>
+                <option value="4">震雷</option>
+                <option value="5">巽風</option>
+                <option value="6">坎水</option>
+                <option value="7">艮山</option>
+                <option value="8">坤地</option>
+              </select>
+            </div>
+            <div class="yao-input-row">
+              <label>下卦</label>
+              <select id="sel-lower" onchange="calculateAll()">
+                <option value="1">乾天</option>
+                <option value="2">兌澤</option>
+                <option value="3">離火</option>
+                <option value="4">震雷</option>
+                <option value="5">巽風</option>
+                <option value="6">坎水</option>
+                <option value="7">艮山</option>
+                <option value="8">坤地</option>
+              </select>
+            </div>
+            <div class="yao-input-row">
+              <label>動爻</label>
+              <select id="sel-move" onchange="calculateAll()">
+                <option value="1">初爻</option>
+                <option value="2">二爻</option>
+                <option value="3">三爻</option>
+                <option value="4">四爻</option>
+                <option value="5">五爻</option>
+                <option value="6">上爻</option>
+              </select>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -866,15 +913,15 @@
         document
           .getElementById("btn-taiji")
           .classList.toggle("active", mode === "taiji");
+        document
+          .getElementById("btn-select")
+          .classList.toggle("active", mode === "select");
         document.getElementById("btn-random").classList.remove("active"); // 取消隨機按鈕反白
 
-        if (mode === "threenum") {
-          document.getElementById("threenum-inputs").style.display = "flex";
-          document.getElementById("taiji-inputs").style.display = "none";
-        } else {
-          document.getElementById("threenum-inputs").style.display = "none";
-          document.getElementById("taiji-inputs").style.display = "flex";
-        }
+        document.getElementById("threenum-inputs").style.display = mode === "threenum" ? "flex" : "none";
+        document.getElementById("taiji-inputs").style.display = mode === "taiji" ? "flex" : "none";
+        document.getElementById("select-inputs").style.display = mode === "select" ? "flex" : "none";
+        
         calculateAll();
       }
 
@@ -885,11 +932,13 @@
         // 視覺：只反白隨機卦按鈕
         document.getElementById("btn-threenum").classList.remove("active");
         document.getElementById("btn-taiji").classList.remove("active");
+        document.getElementById("btn-select").classList.remove("active");
         document.getElementById("btn-random").classList.add("active");
 
         // 顯示三數字輸入框
         document.getElementById("threenum-inputs").style.display = "flex";
         document.getElementById("taiji-inputs").style.display = "none";
+        document.getElementById("select-inputs").style.display = "none";
 
         // 幫用戶自動填寫三組數字 (例如 100~999 之間的亂數)
         document.getElementById("num-1").value =
@@ -901,41 +950,6 @@
 
         calculateAll();
       }
-
-      // --- 隨機太極丸功能 ---
-      function generateRandomTaiji() {
-        currentMode = "taiji";
-        for (let i = 1; i <= 6; i++) {
-          taijiValues[i - 1] = Math.floor(Math.random() * 4) + 6; // 產生 6~9
-        }
-        renderTaijiButtons();
-        calculateAll();
-      }
-
-      // --- 太極丸輸入狀態 ---
-      let taijiValues = [null, null, null, null, null, null];
-
-      function setTaiji(line, val) {
-        taijiValues[line - 1] = val;
-        renderTaijiButtons();
-        calculateAll();
-      }
-
-      function renderTaijiButtons() {
-        for (let i = 1; i <= 6; i++) {
-          let val = taijiValues[i - 1];
-          let group = document.getElementById(`taiji-group-${i}`);
-          if (group) {
-            let btns = group.querySelectorAll(".taiji-btn");
-            btns.forEach((btn) => {
-              if (parseInt(btn.innerText) === val) btn.classList.add("active");
-              else btn.classList.remove("active");
-            });
-          }
-        }
-      }
-
-      // --- 基礎五行與地支對應 ---
       const elements = {
         子: "水",
         丑: "土",
@@ -1488,6 +1502,34 @@
               chgBits.push(0);
             }
           });
+        } else if (mode === "select") {
+          let sUpper = parseInt(document.getElementById("sel-upper").value);
+          let sLower = parseInt(document.getElementById("sel-lower").value);
+          let sMove = parseInt(document.getElementById("sel-move").value);
+
+          const numToTri = { 1: 7, 2: 3, 3: 5, 4: 1, 5: 6, 6: 2, 7: 4, 8: 0 };
+          let upperTri = numToTri[sUpper];
+          let lowerTri = numToTri[sLower];
+
+          origBits = [
+            lowerTri & 1,
+            (lowerTri >> 1) & 1,
+            (lowerTri >> 2) & 1,
+            upperTri & 1,
+            (upperTri >> 1) & 1,
+            (upperTri >> 2) & 1,
+          ];
+
+          chgBits = [...origBits];
+          chgBits[sMove - 1] = 1 - chgBits[sMove - 1];
+
+          for (let i = 0; i < 6; i++) {
+            if (i === sMove - 1) {
+              inputs.push(origBits[i] === 0 ? 6 : 9);
+            } else {
+              inputs.push(origBits[i] === 0 ? 8 : 7);
+            }
+          }
         } else {
           let s1 = document.getElementById("num-1").value;
           let s2 = document.getElementById("num-2").value;

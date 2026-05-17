@@ -724,44 +724,104 @@
             </button>
           </div>
 
-          <div id="select-inputs" style="display: none; flex-direction: column; gap: 12px">
-            <div class="yao-input-row">
-              <label>上卦</label>
-              <select id="sel-upper" onchange="calculateAll()">
-                <option value="1">乾天</option>
-                <option value="2">兌澤</option>
-                <option value="3">離火</option>
-                <option value="4">震雷</option>
-                <option value="5">巽風</option>
-                <option value="6">坎水</option>
-                <option value="7">艮山</option>
-                <option value="8">坤地</option>
-              </select>
+          <div id="select-inputs" style="display: none; flex-direction: column; gap: 15px">
+            <style>
+              .gua-btn-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+              }
+              .gua-symbol-btn {
+                padding: 10px 0;
+                font-size: 28px; /* 特大八卦圖示 */
+                font-weight: bold;
+                border: 2px solid #cbd5e1;
+                border-radius: 8px;
+                background-color: #f8fafc;
+                color: var(--primary-text);
+                cursor: pointer;
+                transition: all 0.2s;
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                line-height: 1.1;
+                user-select: none;
+              }
+              .gua-symbol-btn span.gua-txt {
+                font-size: 15px;
+                margin-top: 4px;
+                color: var(--secondary-text);
+                font-weight: normal;
+              }
+              .gua-symbol-btn:hover {
+                border-color: #94a3b8;
+                background-color: #e2e8f0;
+              }
+              .gua-symbol-btn.active {
+                background-color: var(--accent-blue);
+                color: #ffffff;
+                border-color: var(--accent-blue);
+                box-shadow: 0 3px 8px rgba(30, 64, 175, 0.25);
+              }
+              .gua-symbol-btn.active span.gua-txt {
+                color: #e0e7ff;
+              }
+            </style>
+
+            <input type="hidden" id="sel-upper" value="1">
+            <input type="hidden" id="sel-lower" value="1">
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-weight: bold; color: var(--primary-text); font-size: 16px;">上卦</label>
+              <div class="gua-btn-grid" id="grid-upper">
+                <div class="gua-symbol-btn active" onclick="setSelectGua('upper', 1)">☰<span class="gua-txt">乾</span></div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('upper', 2)">☱<span class="gua-txt">兌</span></div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('upper', 3)">☲<span class="gua-txt">離</span></div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('upper', 4)">☳<span class="gua-txt">震</span></div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('upper', 5)">☴<span class="gua-txt">巽</span></div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('upper', 6)">☵<span class="gua-txt">坎</span></div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('upper', 7)">☶<span class="gua-txt">艮</span></div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('upper', 8)">☷<span class="gua-txt">坤</span></div>
+              </div>
             </div>
-            <div class="yao-input-row">
-              <label>下卦</label>
-              <select id="sel-lower" onchange="calculateAll()">
-                <option value="1">乾天</option>
-                <option value="2">兌澤</option>
-                <option value="3">離火</option>
-                <option value="4">震雷</option>
-                <option value="5">巽風</option>
-                <option value="6">坎水</option>
-                <option value="7">艮山</option>
-                <option value="8">坤地</option>
-              </select>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-weight: bold; color: var(--primary-text); font-size: 16px;">下卦</label>
+              <div class="gua-btn-grid" id="grid-lower">
+                <div class="gua-symbol-btn active" onclick="setSelectGua('lower', 1)">☰<span class="gua-txt">乾</span></div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('lower', 2)">☱<span class="gua-txt">兌</span></div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('lower', 3)">☲<span class="gua-txt">離</span></div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('lower', 4)">☳<span class="gua-txt">震</span></div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('lower', 5)">☴<span class="gua-txt">巽</span></div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('lower', 6)">☵<span class="gua-txt">坎</span></div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('lower', 7)">☶<span class="gua-txt">艮</span></div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('lower', 8)">☷<span class="gua-txt">坤</span></div>
+              </div>
             </div>
-            <div class="yao-input-row">
+
+            <div class="yao-input-row" style="margin-top: 5px;">
               <label>動爻</label>
-              <select id="sel-move" onchange="calculateAll()">
-                <option value="1">初爻</option>
-                <option value="2">二爻</option>
-                <option value="3">三爻</option>
-                <option value="4">四爻</option>
-                <option value="5">五爻</option>
+              <select id="sel-move" onchange="calculateAll()" style="width: 100px;">
                 <option value="6">上爻</option>
+                <option value="5">五爻</option>
+                <option value="4">四爻</option>
+                <option value="3">三爻</option>
+                <option value="2">二爻</option>
+                <option value="1">初爻</option>
               </select>
             </div>
+
+            <script>
+              // 處理點擊八卦圖示的狀態切換與資料更新
+              function setSelectGua(pos, val) {
+                document.getElementById('sel-' + pos).value = val;
+                let btns = document.getElementById('grid-' + pos).querySelectorAll('.gua-symbol-btn');
+                btns.forEach(btn => btn.classList.remove('active'));
+                btns[val-1].classList.add('active');
+                calculateAll(); // 觸發排盤更新
+              }
+            </script>
           </div>
 
         </div>

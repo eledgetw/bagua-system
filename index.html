@@ -593,27 +593,73 @@
                 "
                 >用神</label
               >
-              <select
-                id="yongshen-select"
-                onchange="calculateAll()"
-                style="
-                  font-size: 20px;
-                  padding: 6px 10px;
+              
+              <input type="hidden" id="yongshen-select" value="財妻">
+              
+              <style>
+                .ys-pentagon-container {
+                  position: relative;
+                  width: 150px;
+                  height: 140px; /* 五角形佈局的容器高度 */
+                  margin-top: 5px;
+                }
+                .ys-btn {
+                  position: absolute;
+                  transform: translate(-50%, -50%);
+                  width: 46px;
+                  height: 46px;
+                  font-size: 15px;
                   font-weight: bold;
-                  color: var(--red-text);
-                  border: 2px solid #e2e8f0;
-                  border-radius: 6px;
+                  border: 2px solid #cbd5e1;
+                  border-radius: 50%; /* 圓形按鈕適合五角形排版 */
+                  background-color: #f8fafc;
+                  color: var(--secondary-text);
                   cursor: pointer;
-                  text-align: center;
-                  background: #f8fafc;
-                "
-              >
-                <option value="父母">父母</option>
-                <option value="兄弟">兄弟</option>
-                <option value="子孫">子孫</option>
-                <option value="財妻" selected>財妻</option>
-                <option value="官鬼">官鬼</option>
-              </select>
+                  transition: all 0.2s;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  user-select: none;
+                  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                  padding: 0;
+                }
+                .ys-btn:hover {
+                  background-color: #e2e8f0;
+                  border-color: #94a3b8;
+                }
+                .ys-btn.active {
+                  background-color: var(--accent-blue);
+                  color: #ffffff;
+                  border-color: var(--accent-blue);
+                  box-shadow: 0 3px 8px rgba(30, 64, 175, 0.3);
+                }
+              </style>
+
+              <div class="ys-pentagon-container">
+                <div class="ys-btn" style="left: 75px; top: 15px;" onclick="setYongshen('父母')">父母</div>
+                <div class="ys-btn" style="left: 128px; top: 52px;" onclick="setYongshen('兄弟')">兄弟</div>
+                <div class="ys-btn" style="left: 108px; top: 115px;" onclick="setYongshen('子孫')">子女</div>
+                <div class="ys-btn active" style="left: 42px; top: 115px;" onclick="setYongshen('財妻')">財妻</div>
+                <div class="ys-btn" style="left: 22px; top: 52px;" onclick="setYongshen('官鬼')">官鬼</div>
+              </div>
+
+              <script>
+                // 處理點擊用神按鈕的狀態切換與資料更新
+                function setYongshen(val) {
+                  document.getElementById('yongshen-select').value = val;
+                  let btns = document.querySelectorAll('.ys-btn');
+                  btns.forEach(btn => {
+                    // 兼容視覺上顯示「子女」但背後運算使用「子孫」的判斷
+                    let btnText = btn.innerText;
+                    if (btnText === val || (val === '子孫' && btnText === '子女')) {
+                      btn.classList.add('active');
+                    } else {
+                      btn.classList.remove('active');
+                    }
+                  });
+                  calculateAll(); // 觸發排盤更新
+                }
+              </script>
             </div>
           </div>
 

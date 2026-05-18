@@ -619,32 +619,33 @@
                   user-select: none;
                   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
                   padding: 0;
-                  border: 2px solid #cbd5e1;
+                  
+                  /* 預設未點擊狀態：灰色底、灰色字（與模式按鈕完全一致） */
+                  background-color: #f1f5f9; 
+                  border: 2px solid #cbd5e1; 
+                  color: var(--secondary-text);
                 }
                 
-                /* 父母 - 玄黑 (水：改純黑高對比) */
-                .ys-btn.ys-fu { background-color: #f1f5f9; border-color: #cbd5e1; color: #475569; }
-                .ys-btn.ys-fu:hover { background-color: #e2e8f0; border-color: #94a3b8; }
+                /* 未點擊時滑鼠懸停效果：同步灰色按鈕觸發效果 */
+                .ys-btn:hover:not(.active) {
+                  background-color: #e2e8f0;
+                  border-color: #94a3b8;
+                }
+                
+                /* 只有在點擊啟用（.active）後，才切換顯示專屬五色 */
+                /* 父母 - 玄黑 (水) */
                 .ys-btn.ys-fu.active { background-color: #000000; border-color: #000000; color: #ffffff; box-shadow: 0 3px 8px rgba(0,0,0,0.4); }
 
-                /* 兄弟 - 青綠 (木：依圖改墨綠) */
-                .ys-btn.ys-xiong { background-color: #f0fdf4; border-color: #bbf7d0; color: #16a34a; }
-                .ys-btn.ys-xiong:hover { background-color: #dcfce7; border-color: #86efac; }
+                /* 兄弟 - 青綠 (木) */
                 .ys-btn.ys-xiong.active { background-color: #1a5c49; border-color: #113f32; color: #ffffff; box-shadow: 0 3px 8px rgba(26,92,73,0.3); }
 
-                /* 子女 - 正紅 (火：改純鮮紅) */
-                .ys-btn.ys-zi { background-color: #fef2f2; border-color: #fecaca; color: #dc2626; }
-                .ys-btn.ys-zi:hover { background-color: #fee2e2; border-color: #fca5a5; }
+                /* 子女 - 正紅 (火) */
                 .ys-btn.ys-zi.active { background-color: #ff0000; border-color: #cc0000; color: #ffffff; box-shadow: 0 3px 8px rgba(255,0,0,0.3); }
 
-                /* 財妻 - 琥黃 (土：依圖改深褐) */
-                .ys-btn.ys-cai { background-color: #fffbeb; border-color: #fef08a; color: #b45309; }
-                .ys-btn.ys-cai:hover { background-color: #fef3c7; border-color: #fde047; }
-                .ys-btn.ys-cai.active { background-color: #5c4018; border-color: #3e2b10; color: #ffffff; box-shadow: 0 3px 8px rgba(92,64,24,0.3); }
+                /* 財妻 - 琥黃 (土) */
+                .ys-btn.ys-cai.active { background-color: #ca8a04; border-color: #a16207; color: #ffffff; box-shadow: 0 3px 8px rgba(202,138,4,0.3); }
 
-                /* 官鬼 - 月白 (金：改白底深灰字) */
-                .ys-btn.ys-guan { background-color: #fafafa; border-color: #e4e4e7; color: #71717a; }
-                .ys-btn.ys-guan:hover { background-color: #f4f4f5; border-color: #d4d4d8; }
+                /* 官鬼 - 月白 (金) */
                 .ys-btn.ys-guan.active { background-color: #ffffff; border-color: #4b5563; color: #4b5563; box-shadow: 0 3px 8px rgba(75,85,99,0.25); }
               </style>
 

@@ -925,44 +925,6 @@
         calculateAll();
       }
 
-      // --- 太極丸狀態管理 ---
-      let taijiValues = [null, null, null, null, null, null];
-
-      function setTaiji(yaoIndex, value) {
-        taijiValues[yaoIndex - 1] = value;
-        renderTaijiButtons();
-        calculateAll();
-      }
-
-      function renderTaijiButtons() {
-        for (let i = 1; i <= 6; i++) {
-          const group = document.getElementById(`taiji-group-${i}`);
-          if (!group) continue;
-          
-          const buttons = group.querySelectorAll(".taiji-btn");
-          const currentValue = taijiValues[i - 1];
-
-          buttons.forEach((btn) => {
-            const btnValue = parseInt(btn.innerText);
-            if (btnValue === currentValue) {
-              btn.classList.add("active");
-            } else {
-              btn.classList.remove("active");
-            }
-          });
-        }
-      }
-
-      function generateRandomTaiji() {
-        const options = [6, 7, 8, 9];
-        for (let i = 0; i < 6; i++) {
-          const randomIndex = Math.floor(Math.random() * options.length);
-          taijiValues[i] = options[randomIndex];
-        }
-        renderTaijiButtons();
-        calculateAll();
-      }
-
       // --- 隨機卦功能 ---
       function generateRandomGua() {
         currentMode = "threenum"; // 背景採用三數字邏輯
@@ -1173,6 +1135,44 @@
       };
 
       let currentBazi = {};
+
+      // --- 太極丸狀態管理 ---
+      let taijiValues = [null, null, null, null, null, null];
+
+      function setTaiji(yaoIndex, value) {
+        taijiValues[yaoIndex - 1] = value;
+        renderTaijiButtons();
+        calculateAll();
+      }
+
+      function renderTaijiButtons() {
+        for (let i = 1; i <= 6; i++) {
+          const group = document.getElementById(`taiji-group-${i}`);
+          if (!group) continue;
+          
+          const buttons = group.querySelectorAll(".taiji-btn");
+          const currentValue = taijiValues[i - 1];
+
+          buttons.forEach((btn) => {
+            const btnValue = parseInt(btn.innerText);
+            if (btnValue === currentValue) {
+              btn.classList.add("active");
+            } else {
+              btn.classList.remove("active");
+            }
+          });
+        }
+      }
+
+      function generateRandomTaiji() {
+        const options = [6, 7, 8, 9];
+        for (let i = 0; i < 6; i++) {
+          const randomIndex = Math.floor(Math.random() * options.length);
+          taijiValues[i] = options[randomIndex];
+        }
+        renderTaijiButtons();
+        calculateAll();
+      }
 
       window.onload = () => {
         let now = new Date();

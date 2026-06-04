@@ -593,27 +593,145 @@
                 "
                 >用神</label
               >
-              <select
-                id="yongshen-select"
-                onchange="calculateAll()"
-                style="
-                  font-size: 20px;
-                  padding: 6px 10px;
+
+              <input type="hidden" id="yongshen-select" value="財妻" />
+
+              <style>
+                .ys-pentagon-container {
+                  position: relative;
+                  width: 150px;
+                  height: 140px; /* 五角形佈局的容器高度 */
+                  margin-top: 5px;
+                }
+                .ys-btn {
+                  position: absolute;
+                  transform: translate(-50%, -50%);
+                  width: 46px;
+                  height: 46px;
+                  font-size: 15px;
                   font-weight: bold;
-                  color: var(--red-text);
-                  border: 2px solid #e2e8f0;
-                  border-radius: 6px;
+                  border-radius: 50%; /* 圓形按鈕適合五角形排版 */
                   cursor: pointer;
-                  text-align: center;
-                  background: #f8fafc;
-                "
-              >
-                <option value="父母">父母</option>
-                <option value="兄弟">兄弟</option>
-                <option value="子孫">子孫</option>
-                <option value="財妻" selected>財妻</option>
-                <option value="官鬼">官鬼</option>
-              </select>
+                  transition: all 0.2s;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  user-select: none;
+                  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                  padding: 0;
+
+                  /* 預設未點擊狀態：灰色底、灰色字（與模式按鈕完全一致） */
+                  background-color: #f1f5f9;
+                  border: 2px solid #cbd5e1;
+                  color: var(--secondary-text);
+                }
+
+                /* 未點擊時滑鼠懸停效果：同步灰色按鈕觸發效果 */
+                .ys-btn:hover:not(.active) {
+                  background-color: #e2e8f0;
+                  border-color: #94a3b8;
+                }
+
+                /* 只有在點擊啟用（.active）後，才切換顯示專屬五色 */
+                /* 父母 - 玄黑 (水) */
+                .ys-btn.ys-fu.active {
+                  background-color: #000000;
+                  border-color: #000000;
+                  color: #ffffff;
+                  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+                }
+
+                /* 兄弟 - 青綠 (木) */
+                .ys-btn.ys-xiong.active {
+                  background-color: #1a5c49;
+                  border-color: #113f32;
+                  color: #ffffff;
+                  box-shadow: 0 3px 8px rgba(26, 92, 73, 0.3);
+                }
+
+                /* 子女 - 正紅 (火) */
+                .ys-btn.ys-zi.active {
+                  background-color: #ff0000;
+                  border-color: #cc0000;
+                  color: #ffffff;
+                  box-shadow: 0 3px 8px rgba(255, 0, 0, 0.3);
+                }
+
+                /* 財妻 - 琥黃 (土) */
+                .ys-btn.ys-cai.active {
+                  background-color: #ca8a04;
+                  border-color: #a16207;
+                  color: #ffffff;
+                  box-shadow: 0 3px 8px rgba(202, 138, 4, 0.3);
+                }
+
+                /* 官鬼 - 月白 (金) */
+                .ys-btn.ys-guan.active {
+                  background-color: #ffffff;
+                  border-color: #4b5563;
+                  color: #4b5563;
+                  box-shadow: 0 3px 8px rgba(75, 85, 99, 0.25);
+                }
+              </style>
+
+              <div class="ys-pentagon-container">
+                <div
+                  class="ys-btn ys-fu"
+                  style="left: 75px; top: 15px"
+                  onclick="setYongshen('父母')"
+                >
+                  父母
+                </div>
+                <div
+                  class="ys-btn ys-xiong"
+                  style="left: 128px; top: 52px"
+                  onclick="setYongshen('兄弟')"
+                >
+                  兄弟
+                </div>
+                <div
+                  class="ys-btn ys-zi"
+                  style="left: 108px; top: 115px"
+                  onclick="setYongshen('子孫')"
+                >
+                  子女
+                </div>
+                <div
+                  class="ys-btn active ys-cai"
+                  style="left: 42px; top: 115px"
+                  onclick="setYongshen('財妻')"
+                >
+                  財妻
+                </div>
+                <div
+                  class="ys-btn ys-guan"
+                  style="left: 22px; top: 52px"
+                  onclick="setYongshen('官鬼')"
+                >
+                  官鬼
+                </div>
+              </div>
+
+              <script>
+                // 處理點擊用神按鈕的狀態切換與資料更新
+                function setYongshen(val) {
+                  document.getElementById("yongshen-select").value = val;
+                  let btns = document.querySelectorAll(".ys-btn");
+                  btns.forEach((btn) => {
+                    // 兼容視覺上顯示「子女」但背後運算使用「子孫」的判斷
+                    let btnText = btn.innerText;
+                    if (
+                      btnText === val ||
+                      (val === "子孫" && btnText === "子女")
+                    ) {
+                      btn.classList.add("active");
+                    } else {
+                      btn.classList.remove("active");
+                    }
+                  });
+                  calculateAll(); // 觸發排盤更新
+                }
+              </script>
             </div>
           </div>
 
@@ -632,7 +750,11 @@
             <button class="mode-btn" id="btn-taiji" onclick="setMode('taiji')">
               太極丸
             </button>
-            <button class="mode-btn" id="btn-select" onclick="setMode('select')">
+            <button
+              class="mode-btn"
+              id="btn-select"
+              onclick="setMode('select')"
+            >
               自選卦
             </button>
             <button
@@ -724,46 +846,166 @@
             </button>
           </div>
 
-          <div id="select-inputs" style="display: none; flex-direction: column; gap: 12px">
-            <div class="yao-input-row">
-              <label>上卦</label>
-              <select id="sel-upper" onchange="calculateAll()">
-                <option value="1">乾天</option>
-                <option value="2">兌澤</option>
-                <option value="3">離火</option>
-                <option value="4">震雷</option>
-                <option value="5">巽風</option>
-                <option value="6">坎水</option>
-                <option value="7">艮山</option>
-                <option value="8">坤地</option>
-              </select>
-            </div>
-            <div class="yao-input-row">
-              <label>下卦</label>
-              <select id="sel-lower" onchange="calculateAll()">
-                <option value="1">乾天</option>
-                <option value="2">兌澤</option>
-                <option value="3">離火</option>
-                <option value="4">震雷</option>
-                <option value="5">巽風</option>
-                <option value="6">坎水</option>
-                <option value="7">艮山</option>
-                <option value="8">坤地</option>
-              </select>
-            </div>
-            <div class="yao-input-row">
-              <label>動爻</label>
-              <select id="sel-move" onchange="calculateAll()">
-                <option value="1">初爻</option>
-                <option value="2">二爻</option>
-                <option value="3">三爻</option>
-                <option value="4">四爻</option>
-                <option value="5">五爻</option>
-                <option value="6">上爻</option>
-              </select>
-            </div>
-          </div>
+          <div
+            id="select-inputs"
+            style="display: none; flex-direction: column; gap: 15px"
+          >
+            <style>
+              .gua-btn-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+              }
+              .gua-symbol-btn {
+                padding: 10px 0;
+                font-size: 28px; /* 特大八卦圖示 */
+                font-weight: bold;
+                border: 2px solid #cbd5e1;
+                border-radius: 8px;
+                background-color: #f8fafc;
+                color: var(--primary-text);
+                cursor: pointer;
+                transition: all 0.2s;
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                line-height: 1.1;
+                user-select: none;
+              }
+              .gua-symbol-btn span.gua-txt {
+                font-size: 15px;
+                margin-top: 4px;
+                color: var(--secondary-text);
+                font-weight: normal;
+              }
+              .gua-symbol-btn:hover {
+                border-color: #94a3b8;
+                background-color: #e2e8f0;
+              }
+              .gua-symbol-btn.active {
+                background-color: var(--accent-blue);
+                color: #ffffff;
+                border-color: var(--accent-blue);
+                box-shadow: 0 3px 8px rgba(30, 64, 175, 0.25);
+              }
+              .gua-symbol-btn.active span.gua-txt {
+                color: #e0e7ff;
+              }
+            </style>
 
+            <input type="hidden" id="sel-upper" value="1" />
+            <input type="hidden" id="sel-lower" value="1" />
+
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <label
+                style="
+                  font-weight: bold;
+                  color: var(--primary-text);
+                  font-size: 16px;
+                "
+                >上卦</label
+              >
+              <div class="gua-btn-grid" id="grid-upper">
+                <div
+                  class="gua-symbol-btn active"
+                  onclick="setSelectGua('upper', 1)"
+                >
+                  ☰<span class="gua-txt">乾</span>
+                </div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('upper', 2)">
+                  ☱<span class="gua-txt">兌</span>
+                </div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('upper', 3)">
+                  ☲<span class="gua-txt">離</span>
+                </div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('upper', 4)">
+                  ☳<span class="gua-txt">震</span>
+                </div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('upper', 5)">
+                  ☴<span class="gua-txt">巽</span>
+                </div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('upper', 6)">
+                  ☵<span class="gua-txt">坎</span>
+                </div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('upper', 7)">
+                  ☶<span class="gua-txt">艮</span>
+                </div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('upper', 8)">
+                  ☷<span class="gua-txt">坤</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <label
+                style="
+                  font-weight: bold;
+                  color: var(--primary-text);
+                  font-size: 16px;
+                "
+                >下卦</label
+              >
+              <div class="gua-btn-grid" id="grid-lower">
+                <div
+                  class="gua-symbol-btn active"
+                  onclick="setSelectGua('lower', 1)"
+                >
+                  ☰<span class="gua-txt">乾</span>
+                </div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('lower', 2)">
+                  ☱<span class="gua-txt">兌</span>
+                </div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('lower', 3)">
+                  ☲<span class="gua-txt">離</span>
+                </div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('lower', 4)">
+                  ☳<span class="gua-txt">震</span>
+                </div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('lower', 5)">
+                  ☴<span class="gua-txt">巽</span>
+                </div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('lower', 6)">
+                  ☵<span class="gua-txt">坎</span>
+                </div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('lower', 7)">
+                  ☶<span class="gua-txt">艮</span>
+                </div>
+                <div class="gua-symbol-btn" onclick="setSelectGua('lower', 8)">
+                  ☷<span class="gua-txt">坤</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="yao-input-row" style="margin-top: 5px">
+              <label>動爻</label>
+              <select
+                id="sel-move"
+                onchange="calculateAll()"
+                style="width: 100px"
+              >
+                <option value="6">上爻</option>
+                <option value="5">五爻</option>
+                <option value="4">四爻</option>
+                <option value="3">三爻</option>
+                <option value="2">二爻</option>
+                <option value="1">初爻</option>
+              </select>
+            </div>
+
+            <script>
+              // 處理點擊八卦圖示的狀態切換與資料更新
+              function setSelectGua(pos, val) {
+                document.getElementById("sel-" + pos).value = val;
+                let btns = document
+                  .getElementById("grid-" + pos)
+                  .querySelectorAll(".gua-symbol-btn");
+                btns.forEach((btn) => btn.classList.remove("active"));
+                btns[val - 1].classList.add("active");
+                calculateAll(); // 觸發排盤更新
+              }
+            </script>
+          </div>
         </div>
       </div>
 
@@ -918,10 +1160,13 @@
           .classList.toggle("active", mode === "select");
         document.getElementById("btn-random").classList.remove("active"); // 取消隨機按鈕反白
 
-        document.getElementById("threenum-inputs").style.display = mode === "threenum" ? "flex" : "none";
-        document.getElementById("taiji-inputs").style.display = mode === "taiji" ? "flex" : "none";
-        document.getElementById("select-inputs").style.display = mode === "select" ? "flex" : "none";
-        
+        document.getElementById("threenum-inputs").style.display =
+          mode === "threenum" ? "flex" : "none";
+        document.getElementById("taiji-inputs").style.display =
+          mode === "taiji" ? "flex" : "none";
+        document.getElementById("select-inputs").style.display =
+          mode === "select" ? "flex" : "none";
+
         calculateAll();
       }
 
@@ -1136,42 +1381,37 @@
 
       let currentBazi = {};
 
-      // --- 太極丸狀態管理 ---
+      // --- 太極丸狀態變數與功能 ---
       let taijiValues = [null, null, null, null, null, null];
 
-      function setTaiji(yaoIndex, value) {
-        taijiValues[yaoIndex - 1] = value;
+      function setTaiji(yaoIndex, val) {
+        taijiValues[yaoIndex - 1] = val;
+        renderTaijiButtons();
+        calculateAll();
+      }
+
+      function generateRandomTaiji() {
+        const options = [6, 7, 8, 9];
+        for (let i = 0; i < 6; i++) {
+          taijiValues[i] = options[Math.floor(Math.random() * options.length)];
+        }
         renderTaijiButtons();
         calculateAll();
       }
 
       function renderTaijiButtons() {
         for (let i = 1; i <= 6; i++) {
-          const group = document.getElementById(`taiji-group-${i}`);
-          if (!group) continue;
-          
-          const buttons = group.querySelectorAll(".taiji-btn");
-          const currentValue = taijiValues[i - 1];
-
-          buttons.forEach((btn) => {
-            const btnValue = parseInt(btn.innerText);
-            if (btnValue === currentValue) {
-              btn.classList.add("active");
-            } else {
-              btn.classList.remove("active");
+          let group = document.getElementById("taiji-group-" + i);
+          if (group) {
+            let btns = group.querySelectorAll(".taiji-btn");
+            btns.forEach((btn) => btn.classList.remove("active"));
+            let val = taijiValues[i - 1];
+            if (val !== null) {
+              // 6 對應第 0 個按鈕，7 對應第 1 個，依此類推
+              btns[val - 6].classList.add("active");
             }
-          });
+          }
         }
-      }
-
-      function generateRandomTaiji() {
-        const options = [6, 7, 8, 9];
-        for (let i = 0; i < 6; i++) {
-          const randomIndex = Math.floor(Math.random() * options.length);
-          taijiValues[i] = options[randomIndex];
-        }
-        renderTaijiButtons();
-        calculateAll();
       }
 
       window.onload = () => {

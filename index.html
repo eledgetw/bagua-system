@@ -984,6 +984,7 @@
                 onchange="calculateAll()"
                 style="width: 100px"
               >
+                <option value="0">全靜爻</option>
                 <option value="6">上爻</option>
                 <option value="5">五爻</option>
                 <option value="4">四爻</option>
@@ -1799,10 +1800,12 @@
           ];
 
           chgBits = [...origBits];
-          chgBits[sMove - 1] = 1 - chgBits[sMove - 1];
+          if (sMove > 0) {
+            chgBits[sMove - 1] = 1 - chgBits[sMove - 1];
+          }
 
           for (let i = 0; i < 6; i++) {
-            if (i === sMove - 1) {
+            if (sMove > 0 && i === sMove - 1) {
               inputs.push(origBits[i] === 0 ? 6 : 9);
             } else {
               inputs.push(origBits[i] === 0 ? 8 : 7);

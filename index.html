@@ -2287,146 +2287,132 @@
         const dt = new Date(dtStr);
         const formattedDate = `西元${dt.getFullYear()}年 ${dt.getMonth() + 1}月${dt.getDate()}日 ${String(dt.getHours()).padStart(2, "0")}時${String(dt.getMinutes()).padStart(2, "0")}分`;
 
-        const stems = document.querySelectorAll(".bazi-grid .stem");
-        const branches = document.querySelectorAll(".bazi-grid .branch");
-        // 完美對齊的排版時日月年
-        const baziStr = `
-                <div style="display:flex; gap: 18px; text-align: center; margin-right: 20px; font-weight: normal;">
-                    <div><div>時</div><div>${stems[3].innerText}</div><div>${branches[3].innerText}</div></div>
-                    <div><div>日</div><div>${stems[2].innerText}</div><div>${branches[2].innerText}</div></div>
-                    <div><div>月</div><div>${stems[1].innerText}</div><div>${branches[1].innerText}</div></div>
-                    <div><div>年</div><div>${stems[0].innerText}</div><div>${branches[0].innerText}</div></div>
-                </div>`;
-
-        let noble = "",
-          peach = "",
-          empty = "",
-          horse = "",
-          blade = "";
+        let noble = "", peach = "", empty = "", horse = "", blade = "", tomb = "", dayJue = "", yuePo = "", riChong = "";
         document.querySelectorAll(".shensha-item").forEach((item) => {
           const text = item.innerText;
           if (text.includes("貴人")) noble = text.replace("貴人", "").trim();
           if (text.includes("桃花")) peach = text.replace("桃花", "").trim();
-          if (text.includes("日空")) empty = text.replace("日空", "").trim();
+          if (text.includes("日空")) empty = item.innerHTML.replace(/<span[^>]*>日空<\/span>/, "").replace(/<[^>]+>/g, "").trim();
           if (text.includes("驛馬")) horse = text.replace("驛馬", "").trim();
           if (text.includes("羊刃")) blade = text.replace("羊刃", "").trim();
+          if (text.includes("日墓")) tomb = text.replace("日墓", "").trim();
+          if (text.includes("日絕")) dayJue = text.replace("日絕", "").trim();
+          if (text.includes("月破")) yuePo = item.innerHTML.replace(/<span[^>]*>月破<\/span>/, "").replace(/<[^>]+>/g, "").trim();
+          if (text.includes("日沖")) riChong = item.innerHTML.replace(/<span[^>]*>日沖<\/span>/, "").replace(/<[^>]+>/g, "").trim();
         });
 
         const origTitle = document.querySelectorAll(".gua-title-box")[0];
         const chgTitle = document.querySelectorAll(".gua-title-box")[1];
-        const origName = origTitle
-          ? origTitle.querySelector(".gua-name").innerText
-          : "";
-        const origPalace = origTitle
-          ? origTitle.querySelector(".gua-palace").innerText
-          : "";
-        const chgName = chgTitle
-          ? chgTitle.querySelector(".gua-name").innerText
-          : "";
+        const origName = origTitle ? origTitle.querySelector(".gua-name").innerText : "";
+        const origPalace = origTitle ? origTitle.querySelector(".gua-palace").innerText : "";
+        const chgName = chgTitle ? chgTitle.querySelector(".gua-name").innerText : "";
 
-        const origLinesDOM = document.querySelectorAll(
-          "#gua-original .line-row",
-        );
+        const origLinesDOM = document.querySelectorAll("#gua-original .line-row");
         const chgLinesDOM = document.querySelectorAll("#gua-changed .line-row");
 
-        // 抓取用神
-        const yongShenValue = document.getElementById("yongshen-select").value;
-
-        // 2. 建立隱藏的截圖專用版面 (模仿附圖格式)
+        // 2. 建立隱藏的截圖專用版面 (極致緊湊、放大神煞字體、內縮 QR Code)
         const captureZone = document.createElement("div");
-        captureZone.style.cssText =
-          'position:fixed; top:-9999px; left:0; width:750px; background-color:#ffffff; padding:40px; font-family:"Microsoft JhengHei",sans-serif; color:#000000; z-index:-1000; box-sizing: border-box;';
+        captureZone.style.cssText = 'position:fixed; top:-9999px; left:0; width:1250px; background-color:#ffffff; padding:20px 40px; font-family:"Microsoft JhengHei",sans-serif; color:#000000; z-index:-1000; box-sizing: border-box;';
 
         let html = `
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;">
-                    <div>
-                        <div style="font-size: 18px; margin-bottom: 10px; color: #1e40af; font-weight: bold;">${formattedDate}</div>
-                        <div style="display: flex; gap: 40px; font-size: 18px;">
-                            ${baziStr}
-                            <div style="display:inline-block; line-height: 1.5;">
-                                貴人：${noble}<br>
-                                桃花：${peach}<br>
-                                日空：<span style="color:#16a34a;">${empty}</span>
-                            </div>
-                            <div style="display:inline-block; line-height: 1.5;">
-                                驛馬：${horse}<br>
-                                羊刃：${blade}<br>
-                                用神：${yongShenValue}
-                            </div>
-                        </div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                <div style="font-size: 28px; font-weight: bold; color: #1e40af; margin-top: 10px;">${formattedDate}</div>
+                <div style="margin-right: 60px;">
+                    <img src="qrcode.png" style="width: 100px; height: 100px; object-fit: contain; display:block;">
+                </div>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 15px; font-size: 22px; font-weight: bold;">
+                    <div><span style="color:#64748b; font-weight:normal; margin-right:5px;">貴人</span> ${noble}</div>
+                    <div><span style="color:#64748b; font-weight:normal; margin-right:5px;">桃花</span> ${peach}</div>
+                    <div><span style="color:#64748b; font-weight:normal; margin-right:5px;">日空</span> ${empty}</div>
+                    <div><span style="color:#64748b; font-weight:normal; margin-right:5px;">驛馬</span> ${horse}</div>
+                    <div><span style="color:#64748b; font-weight:normal; margin-right:5px;">羊刃</span> ${blade}</div>
+                    <div><span style="color:#64748b; font-weight:normal; margin-right:5px;">日墓</span> ${tomb}</div>
+                    <div><span style="color:#64748b; font-weight:normal; margin-right:5px;">日絕</span> ${dayJue}</div>
+                    <div style="color:#dc2626;"><span style="color:#dc2626; font-weight:normal; margin-right:5px;">月破</span> ${yuePo}</div>
+                    <div style="color:#dc2626; grid-column: 1 / -1;"><span style="color:#dc2626; font-weight:normal; margin-right:5px;">日沖</span> ${riChong}</div>
+                </div>
+            </div>
+
+            <div style="display: flex;">
+                <div style="flex: 1; padding-right: 15px;">
+                    <div style="text-align: center; margin-bottom: 10px;">
+                        <div style="font-size: 32px; font-weight: 900; color: #1e40af; margin-bottom: 4px;">${origName}</div>
+                        <div style="font-size: 18px; color: #64748b; font-weight: bold;">${origPalace}</div>
                     </div>
-                    <img src="qrcode.png" style="width: 110px; height: 110px; object-fit: contain;">
-                </div>
+                    <div style="display: flex; flex-direction: column-reverse; gap: 6px; font-size: 22px; font-weight: bold;">
+        `;
 
-                <div style="display: flex; font-size: 18px; margin-bottom: 15px; font-weight: bold;">
-                    <div style="width: 50px;">六獸</div>
-                    <div style="width: 140px; text-align: center;">〔伏神〕</div>
-                    <div style="flex: 1; text-align: center;">${origPalace ? origPalace.split(" - ")[0] : ""}：${origName.replace(/【|】/g, "")}<br>〔本卦〕</div>
-                    <div style="width: 60px;"></div>
-                    <div style="flex: 1; text-align: center;">${chgName ? chgName.replace(/【|】/g, "") : ""}<br>${chgName ? "〔變卦〕" : ""}</div>
-                </div>
-                
-                <div style="display: flex; flex-direction: column-reverse; font-size: 20px; line-height: 1.8;">
-            `;
+        let rightHtml = `
+                <div style="flex: 1; padding-left: 15px; border-left: 1px solid transparent;">
+                    <div style="text-align: center; margin-bottom: 10px;">
+                        <div style="font-size: 32px; font-weight: 900; color: #1e40af; margin-bottom: 4px;">${chgName || '<span style="visibility:hidden;">無</span>'}</div>
+                        <div style="font-size: 18px; visibility: hidden; margin-bottom: 4px;">占位</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column-reverse; gap: 6px; font-size: 22px; font-weight: bold;">
+        `;
 
-        // 組合每一爻的資訊
         for (let i = 0; i < 6; i++) {
-          const oLine = origLinesDOM[i];
-          const cLine = chgLinesDOM[i];
-          if (!oLine) continue;
+            const oLine = origLinesDOM[i];
+            const cLine = chgLinesDOM[i];
+            if (!oLine) continue;
 
-          const beast = oLine.querySelector(".beast-box").innerText;
-          const fushenHtml = oLine.querySelector(".fushen-box").innerHTML;
-          const sy = oLine.querySelector(".shi-ying-box").innerText;
-          const oSym = oLine.querySelector(".symbol-box").innerHTML;
-          const oCombo = oLine.querySelector(".combo-box").innerText;
-          const oScoreStr = oLine.querySelector(".score-box").innerText;
+            const beast = oLine.querySelector(".beast-box").innerText;
+            const fushenHtml = oLine.querySelector(".fushen-box").innerHTML;
+            const sy = oLine.querySelector(".shi-ying-box").innerText;
+            const oSym = oLine.querySelector(".symbol-box").innerHTML;
+            const oCombo = oLine.querySelector(".combo-box").innerText;
+            const oScoreStr = oLine.querySelector(".score-box").innerText;
+            const oNoteHtml = oLine.querySelector(".note-box").innerHTML;
+            
+            const isChanged = oLine.querySelector(".symbol-box").classList.contains("changed-red");
+            const colorStyle = isChanged ? 'color:#dc2626;' : 'color:#000000;';
 
-          // 將分數格式轉換，負分改紅色並加左右括號
-          let formattedScore = "";
-          if (oScoreStr) {
-            if (
-              oScoreStr.includes("(") ||
-              oScoreStr.includes("-") ||
-              oScoreStr.includes("－")
-            ) {
-              let num = oScoreStr.replace(/\(|\)|－|-/g, ""); // 濾出純數字
-              formattedScore = `<span style="color:#dc2626;">(－${num})</span>`;
-            } else {
-              formattedScore = `＋${oScoreStr}`;
+            let formattedScore = "";
+            if (oScoreStr) {
+                if (oScoreStr.includes("(") || oScoreStr.includes("-") || oScoreStr.includes("－")) {
+                    let num = oScoreStr.replace(/\(|\)|－|-/g, "");
+                    formattedScore = `<span style="color:#dc2626;">(${num})</span>`;
+                } else {
+                    formattedScore = `${oScoreStr}`;
+                }
             }
-          }
 
-          const isChanged = oLine
-            .querySelector(".symbol-box")
-            .classList.contains("changed-red");
-          let chgPart = "";
-
-          if (isChanged && cLine) {
-            const cCombo = cLine.querySelector(".combo-box").innerText;
-            const cSym = cLine.querySelector(".symbol-box").innerHTML;
-            chgPart = `<span style="color:#dc2626; margin: 0 10px;">==》</span><span style="color:#dc2626; width:75px; display:inline-block; text-align:center;">${cCombo}</span> <span style="color:#dc2626;">${cSym}</span>`;
-          } else if (cLine && chgName) {
-            // 靜爻的對應顯示 (隱藏箭頭以保持對齊)
-            const cCombo = cLine.querySelector(".combo-box").innerText;
-            const cSym = cLine.querySelector(".symbol-box").innerHTML;
-            chgPart = `<span style="margin: 0 10px; visibility:hidden;">==》</span><span style="width:75px; display:inline-block; text-align:center;">${cCombo}</span> <span>${cSym}</span>`;
-          }
-
-          html += `
-                <div style="display: flex; align-items: center; white-space: nowrap;">
-                    <div style="width: 50px;">${beast}</div>
-                    <div style="width: 140px; text-align: right; padding-right: 10px; font-size: 16px;">
-                        ${fushenHtml} <span style="color:#1e40af; font-weight:bold; margin-left:5px;">${sy}</span>
-                    </div>
-                    <div style="width: 100px; text-align: center; ${isChanged ? "color:#dc2626;" : ""}">${oSym}</div>
-                    <div style="width: 120px; padding-left: 5px;">${oCombo} ${formattedScore}</div>
-                    <div style="flex: 1; display:flex; align-items:center;">${chgPart}</div>
+            html += `
+                <div style="display: flex; align-items: center; white-space: nowrap; height: 35px;">
+                    <div style="flex-shrink: 0; width: 140px; text-align: right; padding-right: 15px; font-size: 16px;">${fushenHtml}</div>
+                    <div style="flex-shrink: 0; width: 60px;">${beast}</div>
+                    <div style="flex-shrink: 0; width: 40px; color:#1e40af; text-align:center;">${sy}</div>
+                    <div style="flex-shrink: 0; width: 120px; text-align: center; font-size:26px; line-height:1; letter-spacing:0px; ${colorStyle}">${oSym}</div>
+                    <div style="flex-shrink: 0; width: 90px; text-align: center; ${colorStyle}">${oCombo}</div>
+                    <div style="flex-shrink: 0; width: 50px; text-align: right; padding-right:15px; ${colorStyle}">${formattedScore}</div>
+                    <div style="flex-shrink: 0; width: 180px; font-size:16px; white-space:normal; line-height:1.2;">${oNoteHtml}</div>
                 </div>
             `;
+
+            if (cLine) {
+                const cCombo = cLine.querySelector(".combo-box").innerText;
+                const cSym = cLine.querySelector(".symbol-box").innerHTML;
+                const cNoteHtml = cLine.querySelector(".note-box").innerHTML;
+                const cColorStyle = isChanged ? 'color:#dc2626;' : 'color:#000000;';
+
+                rightHtml += `
+                    <div style="display: flex; align-items: center; white-space: nowrap; height: 35px;">
+                        <div style="flex-shrink: 0; width: 90px; text-align: center; ${cColorStyle}">${cCombo}</div>
+                        <div style="flex-shrink: 0; width: 120px; text-align: center; font-size:26px; line-height:1; letter-spacing:0px; ${cColorStyle}">${cSym}</div>
+                        <div style="flex-shrink: 0; flex: 1; min-width: 180px; padding-left:15px; font-size:16px; white-space:normal; line-height:1.2;">${cNoteHtml}</div>
+                    </div>
+                `;
+            } else {
+                rightHtml += `<div style="height: 35px;"></div>`;
+            }
         }
 
-        html += `</div>`;
+        html += `</div></div>`;
+        rightHtml += `</div></div>`;
+        html += rightHtml + `</div>`;
         captureZone.innerHTML = html;
         document.body.appendChild(captureZone);
 
